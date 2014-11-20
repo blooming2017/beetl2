@@ -73,4 +73,17 @@ public class StringTemplateResourceLoader implements ResourceLoader
 
 	}
 
+	@Override
+	public boolean exist(String key)
+	{
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	@Override
+	public String getResourceId(Resource resource, String id)
+	{
+		return id;
+	}
+
 }

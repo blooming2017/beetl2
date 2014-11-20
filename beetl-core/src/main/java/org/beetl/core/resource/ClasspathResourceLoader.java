@@ -35,6 +35,7 @@ import org.beetl.core.GroupTemplate;
 import org.beetl.core.Resource;
 import org.beetl.core.ResourceLoader;
 import org.beetl.core.fun.FileFunctionWrapper;
+import org.beetl.core.misc.BeetlUtil;
 
 /**
  * ClassPath加载器
@@ -49,7 +50,7 @@ public class ClasspathResourceLoader implements ResourceLoader
 	boolean autoCheck = false;
 	protected String charset = "UTF-8";
 	String functionRoot = "functions";
-	String functionSuffix = "html";
+	String functionSuffix = "fn";
 	GroupTemplate gt = null;
 	ClassLoader classLoader = null;
 
@@ -82,15 +83,7 @@ public class ClasspathResourceLoader implements ResourceLoader
 	public ClasspathResourceLoader(String root, String charset)
 	{
 
-		if (root.equals("/"))
-		{
-			this.root = "";
-		}
-		else
-		{
-			this.root = root;
-		}
-
+		this(root);
 		this.charset = charset;
 	}
 
@@ -160,7 +153,16 @@ public class ClasspathResourceLoader implements ResourceLoader
 			}
 			else
 			{
-				this.root = this.root + "/" + resourceMap.get("root");
+
+				if (this.root.endsWith("/"))
+				{
+					this.root = this.root + resourceMap.get("root");
+				}
+				else
+				{
+					this.root = this.root + "/" + resourceMap.get("root");
+				}
+
 			}
 
 		}
@@ -176,18 +178,19 @@ public class ClasspathResourceLoader implements ResourceLoader
 		}
 
 		this.autoCheck = Boolean.parseBoolean(resourceMap.get("autoCheck"));
-
+		this.functionRoot = resourceMap.get("functionRoot");
 		//初始化functions
 		URL url = classLoader.getResource("");
 		this.gt = gt;
 		if (url.getProtocol().equals("file"))
 		{
-			File root = new File(url.getFile(), this.functionRoot);
-			if (root.exists())
+
+			File fnRoot = new File(url.getFile() + File.separator + root + File.separator + this.functionRoot);
+			if (fnRoot.exists())
 			{
 				String ns = "";
 				String path = "/".concat(this.functionRoot).concat("/");
-				readFuntionFile(root, ns, path);
+				readFuntionFile(fnRoot, ns, path);
 			}
 
 		}
@@ -214,6 +217,31 @@ public class ClasspathResourceLoader implements ResourceLoader
 				gt.registerFunction(functionName, fun);
 			}
 		}
+	}
+
+	@Override
+	public boolean exist(String key)
+	{
+		return this.classLoader.getClass().getResource(root + key) != null;
+	}
+
+	public String getCharset()
+	{
+		return charset;
+	}
+
+	public void setCharset(String charset)
+	{
+		this.charset = charset;
+	}
+
+	@Override
+	public String getResourceId(Resource resource, String id)
+	{
+		if (resource == null)
+			return id;
+		else
+			return BeetlUtil.getRelPath(resource.getId(), id);
 	}
 
 }

@@ -1,20 +1,21 @@
 package org.beetl.core.statement;
 
+import java.util.LinkedHashMap;
+
 import org.beetl.core.Context;
 import org.beetl.core.InferContext;
 import org.beetl.core.Tag;
-import org.beetl.core.TagFactory;
-import org.beetl.core.TagVarBinding;
 import org.beetl.core.exception.BeetlException;
+import org.beetl.ext.tag.HTMLTagVarBindingWrapper;
 
 public class TagVarBindingStatement extends TagStatement
 {
-	IVarIndex[] varIndexs;
+	VarDefineNode[] varIndexs;
 
-	public TagVarBindingStatement(TagFactory tagFactory, Expression[] paras, Statement block,
-			VarDefineNode[] varDefine, GrammarToken token)
+	public TagVarBindingStatement(String tagName, Expression[] paras, Statement block, VarDefineNode[] varDefine,
+			GrammarToken token)
 	{
-		super(tagFactory, paras, block, token);
+		super(tagName, paras, block, token);
 		this.varIndexs = varDefine;
 	}
 
@@ -23,17 +24,30 @@ public class TagVarBindingStatement extends TagStatement
 	{
 		try
 		{
-			if (tag instanceof TagVarBinding)
+			if (tag instanceof HTMLTagVarBindingWrapper)
 			{
-				Object[] vars = ((TagVarBinding) tag).bindVars();
-				for (int i = 0; i < vars.length; i++)
+				HTMLTagVarBindingWrapper htmlTag = (HTMLTagVarBindingWrapper) tag;
+				//初始化
+				Object[] vars = htmlTag.bindVars();
+				if (vars != null)
 				{
-					ctx.vars[varIndexs[i].getVarIndex()] = vars[i];
+					for (int i = 0; i < vars.length; i++)
+					{
+						ctx.vars[varIndexs[i].getVarIndex()] = vars[i];
+					}
 				}
+
+				LinkedHashMap<String, Integer> indexMap = new LinkedHashMap<String, Integer>(this.varIndexs.length);
+				for (VarDefineNode node : this.varIndexs)
+				{
+					indexMap.put(node.token.text, node.varIndex);
+				}
+				htmlTag.mapName2Index(indexMap);
+
 			}
 			else
 			{
-				BeetlException be = new BeetlException(BeetlException.ERROR, "tag必须是TagVarBinding子类");
+				BeetlException be = new BeetlException(BeetlException.ERROR, "tag必须是HTMLTagVarBindingWrapper");
 				be.pushToken(this.token);
 				throw be;
 			}

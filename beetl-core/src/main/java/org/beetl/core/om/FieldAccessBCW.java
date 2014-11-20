@@ -54,6 +54,8 @@ public class FieldAccessBCW implements BCW
 	static final byte CONS_CLASS = 7;
 	static final byte CONS_UTF8 = 1;
 	static final byte CONS_METHODREF = 10;
+	static final byte CONS_INTERFACE_METHODREF = 11;
+
 	static final byte CONS_NAME_AND_TYPE = 12;
 	static final byte CONS_DOUBLE = 6;
 
@@ -62,6 +64,8 @@ public class FieldAccessBCW implements BCW
 	static final short ALOAD_2 = 44;
 	static final short INVOKE_SPECIAL = 183;
 	static final short INVOKE_VIRTUAL = 182;
+	static final short INVOKE_INTERFACE = 185;
+
 	static final short RETURN = 177;
 	static final short ARETURN = 176;
 	static final short CHECK_CAST = 192;
@@ -104,6 +108,7 @@ public class FieldAccessBCW implements BCW
 	String targetFunctionDesc = "()I";
 	String retByteCodeType = "I";
 	boolean isGeneralGet = false;
+	boolean isInterface = false;
 
 	//	static ASMClassLoader loader = new ASMClassLoader();
 	//
@@ -141,6 +146,8 @@ public class FieldAccessBCW implements BCW
 
 	public FieldAccessBCW(Class c, String name, String methodName, Class returnType)
 	{
+		if (c.isInterface())
+			isInterface = true;
 		String cname = c.getName().replace(".", "/");
 		this.targetCls = cname;
 		this.cls = cname + "_" + name;
@@ -154,6 +161,9 @@ public class FieldAccessBCW implements BCW
 
 	public FieldAccessBCW(Class c, String name, String methodName, Class returnType, Class paremterType)
 	{
+
+		if (c.isInterface())
+			isInterface = true;
 		String cname = c.getName().replace(".", "/");
 		this.targetCls = cname;
 		this.cls = cname + "_" + name;
@@ -171,6 +181,7 @@ public class FieldAccessBCW implements BCW
 		ByteArrayOutputStream bs = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(bs);
 		write(out);
+
 		return bs.toByteArray();
 	}
 
@@ -232,6 +243,11 @@ public class FieldAccessBCW implements BCW
 					out.writeShort((Short) array[1]);
 					byte[] content = (byte[]) array[2];
 					out.write(content);
+					break;
+				case CONS_INTERFACE_METHODREF:
+					//class & nameAndType
+					out.writeShort((Short) array[1]);
+					out.writeShort((Short) array[2]);
 					break;
 				case CONS_METHODREF:
 					//class & nameAndType
@@ -302,6 +318,7 @@ public class FieldAccessBCW implements BCW
 		out.writeByte(this.CHECK_CAST);
 		short classIndex = this.registerClass(this.targetCls);
 		out.writeShort(classIndex);
+
 		if (this.isGeneralGet)
 		{
 			out.writeByte(ALOAD_2);
@@ -310,10 +327,21 @@ public class FieldAccessBCW implements BCW
 			out.writeShort(classIndex);
 
 		}
-
-		out.writeByte(INVOKE_VIRTUAL);
-		int methodIndex = registerMethod(this.targetCls, this.targetFunction, this.targetFunctionDesc);
-		out.writeShort(methodIndex);
+		int methodIndex = 0;
+		if (this.isInterface)
+		{
+			out.writeByte(INVOKE_INTERFACE);
+			methodIndex = this.registerInterfaceMethod(this.targetCls, this.targetFunction, this.targetFunctionDesc);
+			out.writeShort(methodIndex);
+			out.writeByte(1);
+			out.writeByte(0);
+		}
+		else
+		{
+			out.writeByte(INVOKE_VIRTUAL);
+			methodIndex = registerMethod(this.targetCls, this.targetFunction, this.targetFunctionDesc);
+			out.writeShort(methodIndex);
+		}
 
 		if (this.retByteCodeType.equals("I"))
 		{
@@ -429,6 +457,18 @@ public class FieldAccessBCW implements BCW
 
 		Object[] array = new Object[]
 		{ this.CONS_METHODREF, clsNameIndex, nameAndTypeIndex };
+		this.constPool.add(array);
+		return getCurrentIndex();
+	}
+
+	public short registerInterfaceMethod(String clsName, String method, String desc)
+	{
+
+		short clsNameIndex = this.registerClass(clsName);
+		short nameAndTypeIndex = registerNameAndType(method, desc);
+
+		Object[] array = new Object[]
+		{ this.CONS_INTERFACE_METHODREF, clsNameIndex, nameAndTypeIndex };
 		this.constPool.add(array);
 		return getCurrentIndex();
 	}

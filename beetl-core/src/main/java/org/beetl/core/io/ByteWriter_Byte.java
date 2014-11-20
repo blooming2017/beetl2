@@ -202,13 +202,15 @@ public class ByteWriter_Byte extends ByteWriter
 	@Override
 	public void writeNumberChars(char[] chars, int len) throws IOException
 	{
+
+		byte[] bs = ctx.localBuffer.getByteBuffer(len);
 		for (int i = 0; i < len; i++)
 		{
-			//	byte bs = (byte) (chars[i] & 0xFF);
-			//this.os.write(bs);
-			this.os.write((byte) chars[i]);
+
+			bs[i] = (byte) chars[i];
+
 		}
+		this.os.write(bs, 0, len);
 
 	}
-
 }

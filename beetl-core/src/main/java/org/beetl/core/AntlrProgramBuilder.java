@@ -69,6 +69,7 @@ import org.beetl.core.parser.BeetlParser.ContinueStContext;
 import org.beetl.core.parser.BeetlParser.DirectiveExpContext;
 import org.beetl.core.parser.BeetlParser.DirectiveExpIDListContext;
 import org.beetl.core.parser.BeetlParser.DirectiveStContext;
+import org.beetl.core.parser.BeetlParser.EndContext;
 import org.beetl.core.parser.BeetlParser.ExpressionContext;
 import org.beetl.core.parser.BeetlParser.ExpressionListContext;
 import org.beetl.core.parser.BeetlParser.ForControlContext;
@@ -224,6 +225,12 @@ public class AntlrProgramBuilder
 
 		}
 
+		if (pbCtx.current.gotoValue == IGoto.RETURN || pbCtx.current.gotoValue == IGoto.BREAK)
+		{
+			//如果顶级scope也有return 和break，则检测
+			data.hasGoto = true;
+		}
+
 		pbCtx.anzlyszeGlobal();
 		pbCtx.anzlyszeLocal();
 		data.varIndexSize = pbCtx.varIndexSize;
@@ -267,7 +274,14 @@ public class AntlrProgramBuilder
 		}
 		else if (node instanceof ReturnStContext)
 		{
-			ReturnStatement st = new ReturnStatement(null);
+			ReturnStContext rtnCtx = (ReturnStContext) node;
+			ExpressionContext expCtx = rtnCtx.expression();
+			Expression exp = null;
+			if (expCtx != null)
+			{
+				exp = this.parseExpress(expCtx);
+			}
+			ReturnStatement st = new ReturnStatement(exp, null);
 			pbCtx.current.gotoValue = IGoto.RETURN;
 			return st;
 		}
@@ -372,9 +386,14 @@ public class AntlrProgramBuilder
 			return this.parseSelect(selectCtx);
 		}
 
+		else if (node instanceof EndContext)
+		{
+			return null;
+		}
+
 		else
 		{
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("未识别，确认模板书写是否正确");
 		}
 
 	}
@@ -584,18 +603,29 @@ public class AntlrProgramBuilder
 			Statement block = parseBlock(blockCtx.statement(), blockCtx);
 
 			this.pbCtx.exitBlock();
-
-			TagStatement tag = new TagVarBindingStatement(this.gt.getTagFactory(id), expList, block, varDefine,
-					this.getBTToken(id, line));
+			TagFactory tf = this.gt.getTagFactory(id);
+			if (tf == null)
+			{
+				BeetlException ex = new BeetlException(BeetlException.TAG_NOT_FOUND);
+				ex.pushToken(this.getBTToken(id, fc.functionNs().getStart().getLine()));
+				throw ex;
+			}
+			TagStatement tag = new TagVarBindingStatement(id, expList, block, varDefine, this.getBTToken(id, line));
 			return tag;
 		}
 		else
 		{
 			BlockContext blockCtx = fc.block();
 			Statement block = parseBlock(blockCtx.statement(), blockCtx);
-
-			TagStatement tag = new TagStatement(this.gt.getTagFactory(id), expList, block, this.getBTToken(id, fc
-					.functionNs().getStart().getLine()));
+			TagFactory tf = this.gt.getTagFactory(id);
+			if (tf == null)
+			{
+				BeetlException ex = new BeetlException(BeetlException.TAG_NOT_FOUND);
+				ex.pushToken(this.getBTToken(id, fc.functionNs().getStart().getLine()));
+				throw ex;
+			}
+			TagStatement tag = new TagStatement(id, expList, block, this.getBTToken(id, fc.functionNs().getStart()
+					.getLine()));
 			return tag;
 		}
 
@@ -871,10 +901,26 @@ public class AntlrProgramBuilder
 			ForInControlContext forCtx = forTypeCtx.forInControl();
 			VarDefineNode forVar = new VarDefineNode(this.getBTToken(forCtx.Identifier().getSymbol()));
 
+			if (pbCtx.hasDefined(forVar.token.text) != null)
+			{
+				GrammarToken token = pbCtx.hasDefined(forVar.token.text);
+				BeetlException ex = new BeetlException(BeetlException.VAR_ALREADY_DEFINED, "已经在第" + token.line + "行定义");
+				ex.pushToken(forVar.token);
+				throw ex;
+			}
+
 			VarDefineNode loopStatusVar = new VarDefineNode(new org.beetl.core.statement.GrammarToken(forCtx
 					.Identifier().getSymbol().getText()
 					+ "LP", forCtx.Identifier().getSymbol().getLine(), 0));
 
+			if (pbCtx.hasDefined(loopStatusVar.token.text) != null)
+			{
+				GrammarToken token = pbCtx.hasDefined(loopStatusVar.token.text);
+				BeetlException ex = new BeetlException(BeetlException.VAR_ALREADY_DEFINED, "For循环隐含变量，已经在第"
+						+ token.line + "行定义");
+				ex.pushToken(loopStatusVar.token);
+				throw ex;
+			}
 			pbCtx.addVarAndPostion(forVar);
 
 			pbCtx.addVarAndPostion(loopStatusVar);
@@ -1046,6 +1092,13 @@ public class AntlrProgramBuilder
 		{
 			VarAssignStatement vas = this.parseAssign(amc);
 			listNode.add(vas);
+			if (pbCtx.hasDefined(vas.token.text) != null)
+			{
+				GrammarToken token = pbCtx.hasDefined(vas.token.text);
+				BeetlException ex = new BeetlException(BeetlException.VAR_ALREADY_DEFINED, "已经在第" + token.line + "行定义");
+				ex.pushToken(vas.token);
+				throw ex;
+			}
 			pbCtx.addVar(vas.token.text);
 			pbCtx.setVarPosition(vas.token.text, vas);
 
@@ -1278,7 +1331,7 @@ public class AntlrProgramBuilder
 		{
 			//变量的属性引用,回到第一个，构造一个变量
 			String varName = ids.get(0).getText();
-			VarRef ref = new VarRef(new VarAttribute[0], false, null, this.getBTToken("varName", ncc.start.getLine()));
+			VarRef ref = new VarRef(new VarAttribute[0], false, null, this.getBTToken(varName, ncc.start.getLine()));
 			this.pbCtx.setVarPosition(varName, ref);
 			insNode = new InstanceNode(ref);
 			i = 1;
@@ -1594,7 +1647,8 @@ public class AntlrProgramBuilder
 
 		}
 
-		VarRef var = new VarRef(vas, hasSafe, safeExp, this.getBTToken(varRef.Identifier().getSymbol()));
+		VarRef var = new VarRef(vas, hasSafe, safeExp, this.getBTToken(varRef.getText(), varRef.Identifier()
+				.getSymbol().getLine()), this.getBTToken(varRef.Identifier().getSymbol()));
 		pbCtx.setVarPosition(varRef.Identifier().getText(), var);
 		return var;
 	}
@@ -1672,7 +1726,24 @@ public class AntlrProgramBuilder
 					}
 					else
 					{
-						value = Integer.parseInt(strValue);
+						if (strValue.length() < 10)
+						{
+							value = Integer.parseInt(strValue);
+						}
+						else if (strValue.length() > 10)
+						{
+							value = Long.parseLong(strValue);
+						}
+						else if (strValue.compareTo("2147483647") > 0)
+						{
+
+							value = Long.parseLong(strValue);
+						}
+						else
+						{
+							value = Integer.parseInt(strValue);
+						}
+
 					}
 
 					break;
@@ -1703,7 +1774,56 @@ public class AntlrProgramBuilder
 
 	private String getStringValue(String strValue)
 	{
-		return strValue.substring(1, strValue.length() - 1);
+		char[] ch = strValue.toCharArray();
+		StringBuilder sb = new StringBuilder(strValue.length());
+		for (int i = 1; i < ch.length - 1; i++)
+		{
+			char c = ch[i];
+			if (c == '\\')
+			{
+				char spec = ch[++i];
+				char real = 0;
+				switch (spec)
+				{
+					case '\"':
+						real = '\"';
+						break;
+					case '\'':
+						real = '\'';
+						break;
+					case 't':
+						real = '\t';
+						break;
+					case 'r':
+						real = '\r';
+						break;
+					case 'n':
+						real = '\n';
+						break;
+					case 'b':
+						real = '\b';
+						break;
+					case 'f':
+						real = '\f';
+						break;
+					case '\\':
+						real = '\\';
+						break;
+
+					default:
+						// 16进制，8进制不支持，目前语法上可以通过，但未来取消
+						throw new RuntimeException("不支持的转义符号" + strValue);
+
+				}
+				sb.append(real);
+
+			}
+			else
+			{
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	private boolean isHighScaleNumber(String strValue)
