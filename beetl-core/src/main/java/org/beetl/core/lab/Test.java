@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.beetl.core.Configuration;
+import org.beetl.core.Context;
+import org.beetl.core.Function;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.ClasspathResourceLoader;
@@ -25,6 +27,7 @@ public class Test
 		cfg.setStatementEnd("%>");
 		gt.registerFunctionPackage("strings", new StringUtils());
 		gt.registerTag("menu", TestGeneralVarTagBinding.class);
+		gt.registerFunction("testFun", new TestFun());
 		for (int i = 0; i < 1; i++)
 		{
 
@@ -42,11 +45,28 @@ public class Test
 			t.binding("date2", new Date(10002));
 			t.binding("total", 15);
 			t.binding("list", list);
+			t.binding("array", new int[]
+			{ 1, 2, 3 });
 
 			ByteArrayOutputStream bs = new ByteArrayOutputStream();
 			t.renderTo(bs);
 			System.out.println(new String(bs.toByteArray()));
 
+		}
+
+	}
+
+	public static class TestFun implements Function
+	{
+
+		@Override
+		public List call(Object[] paras, Context ctx)
+		{
+			List list = new ArrayList();
+			list.add("hi");
+			list.add("joel");
+			System.out.println("list -----");
+			return list;
 		}
 
 	}
