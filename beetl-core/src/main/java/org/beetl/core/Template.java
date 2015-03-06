@@ -40,6 +40,7 @@ import org.beetl.core.exception.BeetlException;
 import org.beetl.core.io.ByteWriter_Byte;
 import org.beetl.core.io.ByteWriter_Char;
 import org.beetl.core.misc.BeetlUtil;
+import org.beetl.core.statement.AjaxStatement;
 import org.beetl.core.statement.ErrorGrammarProgram;
 import org.beetl.core.statement.GrammarToken;
 import org.beetl.core.statement.Program;
@@ -54,7 +55,7 @@ public class Template
 	public Configuration cf;
 	public GroupTemplate gt;
 	public boolean isRoot = true;
-
+	public String ajaxId = null;
 	Context ctx = new Context();
 
 	protected Template(GroupTemplate gt, Program program, Configuration cf)
@@ -119,8 +120,23 @@ public class Template
 				}
 			}
 			program.metaData.initContext(ctx);
+			if (ajaxId != null)
+			{
+				AjaxStatement ajax = program.metaData.getAjax(ajaxId);
+				if (ajax == null)
+				{
+					BeetlException be = new BeetlException(BeetlException.AJAX_NOT_FOUND);
 
-			program.execute(ctx);
+					be.pushToken(new GrammarToken(ajaxId, 0, 0));
+					throw be;
+				}
+				ajax.execute(ctx);
+			}
+			else
+			{
+				program.execute(ctx);
+			}
+
 			byteWriter.flush();
 		}
 		catch (BeetlException e)

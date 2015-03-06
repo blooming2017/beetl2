@@ -44,6 +44,7 @@ import org.beetl.core.exception.BeetlException;
 import org.beetl.core.exception.HTMLTagParserException;
 import org.beetl.core.exception.ScriptEvalError;
 import org.beetl.core.fun.FunctionWrapper;
+import org.beetl.core.misc.BeetlUtil;
 import org.beetl.core.misc.ClassSearch;
 import org.beetl.core.misc.PrimitiveArrayUtil;
 import org.beetl.core.om.ObjectUtil;
@@ -450,6 +451,19 @@ public class GroupTemplate
 		return this.getTemplateByLoader(key, loader);
 	}
 
+	/** 获取模板key的标有ajaxId的模板片段。
+	 * @param key
+	 * @param ajaxId
+	 * @param loader
+	 * @return
+	 */
+	public Template getAjaxTemplate(String key, String ajaxId, ResourceLoader loader)
+	{
+		Template template = this.getTemplateByLoader(key, loader);
+		template.ajaxId = ajaxId;
+		return template;
+	}
+
 	/** 得到模板，并指明父模板
 	 * @param key
 	 * @param parent
@@ -462,9 +476,9 @@ public class GroupTemplate
 		return template;
 	}
 
-	/** 得到模板，并指明父模板，通过用于
+	/** 得到模板，并指明父模板。
 	 * @param key
-	 * @param parent
+	 * @param parent，此参数目前未使用
 	 * @return
 	 */
 	public Template getTemplate(String key, String parent)
@@ -483,6 +497,19 @@ public class GroupTemplate
 	{
 
 		return getTemplateByLoader(key, this.resourceLoader);
+	}
+
+	/** 获取模板的ajax片段，
+	 * @param key ，key为模板resourceId
+	 * @param ajaxId,ajax标示
+	 * @return
+	 */
+	public Template getAjaxTemplate(String key, String ajaxId)
+	{
+
+		Template t = getTemplateByLoader(key, this.resourceLoader);
+		t.ajaxId = ajaxId;
+		return t;
 	}
 
 	private Template getTemplateByLoader(String key, ResourceLoader loader)
@@ -550,7 +577,8 @@ public class GroupTemplate
 			sf = new Transformator(conf.placeholderStart, conf.placeholderEnd, conf.statementStart, conf.statementEnd);
 			if (this.conf.isHtmlTagSupport())
 			{
-				sf.enableHtmlTagSupport(conf.getHtmlTagStart(), conf.getHtmlTagEnd());
+				sf.enableHtmlTagSupport(conf.getHtmlTagStart(), conf.getHtmlTagEnd(),
+						this.conf.getHtmlTagBindingAttribute());
 			}
 			Reader scriptReader;
 			scriptReader = sf.transform(reader);
@@ -669,11 +697,7 @@ public class GroupTemplate
 
 	public void registerFunction(String name, Function fn)
 	{
-		/*
-		if (this.containTag(name)) {
-			throw new RuntimeException("Function和Tag方法名不能重复:" + name);
-		}
-		*/
+		checkFunctionName(name);
 		this.fnMap.put(name, fn);
 	}
 
@@ -686,17 +710,27 @@ public class GroupTemplate
 	 */
 	public void registerFunctionPackage(String packageName, Object o)
 	{
-
+		checkFunctionName(packageName);
 		registerFunctionPackage(packageName, o.getClass(), o);
 
 	}
 
 	public void registerFunctionPackage(String packageName, Class cls)
 	{
-
+		checkFunctionName(packageName);
 		Object o = ObjectUtil.tryInstance(cls.getName());
 		registerFunctionPackage(packageName, cls, o);
 
+	}
+
+	private void checkFunctionName(String name)
+	{
+
+		if (!BeetlUtil.checkNameing(name))
+		{
+			int[] log = BeetlUtil.getLog();
+			throw new RuntimeException("注册方法名不合法:" + name + ",错误位置:" + log[0] + ",出现错误的字符:" + (char) log[1]);
+		}
 	}
 
 	protected void registerFunctionPackage(String packageName, Class target, Object o)
@@ -729,12 +763,31 @@ public class GroupTemplate
 
 	public void registerTag(String name, Class tagCls)
 	{
+		checkTagName(name);
 		this.tagFactoryMap.put(name, new DefaultTagFactory(tagCls));
 	}
 
 	public void registerTagFactory(String name, TagFactory tagFactory)
 	{
+		checkTagName(name);
 		this.tagFactoryMap.put(name, tagFactory);
+	}
+
+	private void checkTagName(String name)
+	{
+		if (!BeetlUtil.checkNameing(name))
+		{
+			int[] log = BeetlUtil.getLog();
+			if (log[1] == 58)
+			{
+				throw new RuntimeException("注册Tag名称不合法:" + name + ",错误位置:" + log[0] + ",出现错误的字符:" + (char) log[1]
+						+ ",请使用\'.\'");
+			}
+			else
+			{
+				throw new RuntimeException("注册Tag名称不合法:" + name + ",错误位置:" + log[0] + ",出现错误的字符:" + (char) log[1]);
+			}
+		}
 	}
 
 	public TagFactory getTagFactory(String name)

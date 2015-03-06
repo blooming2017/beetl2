@@ -44,6 +44,26 @@ import org.beetl.core.io.ByteWriter_Char;
  */
 public class BeetlUtil
 {
+	//一般变量名称12个足够了
+	static char[] commonArray = new char[12];
+
+	static byte[] chars = new byte[]
+	{
+			// $,%,&,',(,),*,+,,,-, .,/, 0, 1, 2, 3, 4, 5, 6,
+			36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 46, 0, 48, 49, 50, 51, 52, 53, 54,
+			// 7, 8, 9,:,;,<,=,>,?,@, A, B, C, D, E, F, G, H,
+			55, 56, 57, 0, 0, 0, 0, 0, 0, 0, 65, 66, 67, 68, 69, 70, 71, 72,
+			// I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W,
+			73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+			// X, Y, Z,[,\,],^, _,`, a, b, c,  d,  e,  f,  g,
+			88, 89, 90, 0, 0, 0, 0, 95, 0, 97, 98, 99, 100, 101, 102, 103,
+			//  h,  i,  j,  k,  l,  m,  n,  o,  p,  q,  r,
+			104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114,
+			//  s,  t,  u,  v,  w,  x,  y,  z
+			115, 116, 117, 118, 119, 120, 121, 122 };
+	//最近一次错误记录
+	static int[] checkReult = new int[2];
+
 	/**判断一个路径是否指到外部了，比如../../test.txt就指到外部
 	 * @param child
 	 * @return
@@ -120,18 +140,27 @@ public class BeetlUtil
 			{
 				//相对路径
 				int i = siblings.length() - 1;
+				boolean find = false;
 				for (; i > 0; i--)
 				{
 					char c = siblings.charAt(i);
 					if (c == '\\' || c == '/')
 					{
+						find = true;
 						break;
 					}
 				}
+				if (find)
+				{
+					String parent = siblings.substring(0, i + 1);
 
-				String parent = siblings.substring(0, i + 1);
+					relResourceId = parent.concat(resourceId);
+				}
+				else
+				{
+					relResourceId = resourceId;
+				}
 
-				relResourceId = parent.concat(resourceId);
 			}
 			else
 			{
@@ -186,9 +215,63 @@ public class BeetlUtil
 		{
 			throw new RuntimeException(e);
 		}
-		catch (URISyntaxException e) {
+		catch (URISyntaxException e)
+		{
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	/**
+	 * check 命名合法性
+	 * @author 964700108@qq.com
+	 * @param str 需要check的字符串
+	 * @return
+	 * 		
+	 */
+	public static boolean checkNameing(String str)
+	{
+		int len = 0;
+		if (str == null || (len = str.length()) == 0)
+		{
+			return false;
+		}
+		if (len > commonArray.length)
+		{
+			commonArray = new char[len];
+		}
+		str.getChars(0, len, commonArray, 0);
+		int index = 0;
+		char word = commonArray[index++];
+		//首字母判断  不为数字 , .
+		if (word >= 46 && word <= 57)
+			setLog(1, word);
+		//尾字母判断
+		else if (commonArray[len - 1] == 46)
+			setLog(len, 46);
+		else
+			while (true)
+			{
+				if (word < 36 || word > 122 || chars[word - 36] == 0)
+				{
+					setLog(index + 1, word);
+					return false;
+				}
+				if (index == len)
+					return true;
+				word = commonArray[index++];
+			}
+		return false;
+	}
+
+	private static void setLog(int index, int errorChar)
+	{
+		checkReult[0] = index;
+		checkReult[1] = errorChar;
+	}
+
+	public static int[] getLog()
+	{
+		return checkReult;
 	}
 }
