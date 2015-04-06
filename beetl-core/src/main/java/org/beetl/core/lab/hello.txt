@@ -1,13 +1,2 @@
-<%
-
-#ajax tt1:{
-print("ok");
-}
-
-#ajax tt1:{
-print("ok1");
-}
-
-
-
-%>
+<% var a={%> <% } ; %>
+${a}

@@ -33,11 +33,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -51,7 +51,8 @@ import org.beetl.core.parser.BeetlParser;
 import org.beetl.core.parser.BeetlParser.AddminExpContext;
 import org.beetl.core.parser.BeetlParser.AjaxStContext;
 import org.beetl.core.parser.BeetlParser.AndExpContext;
-import org.beetl.core.parser.BeetlParser.AssignGeneralContext;
+import org.beetl.core.parser.BeetlParser.AssignGeneralInExpContext;
+import org.beetl.core.parser.BeetlParser.AssignGeneralInStContext;
 import org.beetl.core.parser.BeetlParser.AssignIdContext;
 import org.beetl.core.parser.BeetlParser.AssignMentContext;
 import org.beetl.core.parser.BeetlParser.AssignStContext;
@@ -144,6 +145,7 @@ import org.beetl.core.statement.CompareExpression;
 import org.beetl.core.statement.ContentBodyExpression;
 import org.beetl.core.statement.ContinueStatement;
 import org.beetl.core.statement.DirectiveStatement;
+import org.beetl.core.statement.EndStatement;
 import org.beetl.core.statement.Expression;
 import org.beetl.core.statement.ForStatement;
 import org.beetl.core.statement.FormatExpression;
@@ -175,6 +177,7 @@ import org.beetl.core.statement.TagVarBindingStatement;
 import org.beetl.core.statement.TernaryExpression;
 import org.beetl.core.statement.TryCatchStatement;
 import org.beetl.core.statement.Type;
+import org.beetl.core.statement.VarAssignExpression;
 import org.beetl.core.statement.VarAssignStatement;
 import org.beetl.core.statement.VarAssignStatementSeq;
 import org.beetl.core.statement.VarAttribute;
@@ -202,6 +205,8 @@ public class AntlrProgramBuilder
 
 	Expression[] EMPTY_EXPRESSION = new Expression[0];
 	GroupTemplate gt;
+	//多余分号
+	static EndStatement endStatment = new EndStatement();
 
 	public AntlrProgramBuilder(GroupTemplate gt)
 	{
@@ -394,7 +399,7 @@ public class AntlrProgramBuilder
 
 		else if (node instanceof EndContext)
 		{
-			return null;
+			return endStatment;
 		}
 
 		else
@@ -480,7 +485,7 @@ public class AntlrProgramBuilder
 		ExpressionContext ect = sctx.parExpression().expression();
 		Expression exp = this.parseExpress(ect);
 		List<SwitchBlockStatementGroupContext> list = sctx.switchBlock().switchBlockStatementGroup();
-		TreeMap<Expression, BlockStatement> condtionsStatementsMap = new TreeMap<Expression, BlockStatement>();
+		LinkedHashMap<Expression, BlockStatement> condtionsStatementsMap = new LinkedHashMap<Expression, BlockStatement>();
 		List<Expression> conditionList = new ArrayList<Expression>();
 		BlockStatement defaultBlock = null;
 		for (SwitchBlockStatementGroupContext group : list)
@@ -517,12 +522,12 @@ public class AntlrProgramBuilder
 	{
 
 		VarAssignStatement vas = null;
-		if (amc instanceof AssignGeneralContext)
+		if (amc instanceof AssignGeneralInStContext)
 		{
-			AssignGeneralContext agc = (AssignGeneralContext) amc;
-			ExpressionContext expCtx = agc.expression();
+			AssignGeneralInStContext agc = (AssignGeneralInStContext) amc;
+			ExpressionContext expCtx = agc.generalAssignExp().expression();
 			Expression exp = parseExpress(expCtx);
-			vas = new VarAssignStatement(exp, getBTToken(agc.Identifier().getSymbol()));
+			vas = new VarAssignStatement(exp, getBTToken(agc.generalAssignExp().Identifier().getSymbol()));
 
 			return vas;
 		}
@@ -865,9 +870,19 @@ public class AntlrProgramBuilder
 		{
 			// debug函数传递额外的行数
 			Literal l = new Literal(btToken.line, btToken);
-			Expression[] newExps = new Expression[exps.length + 1];
+			Expression[] newExps = new Expression[exps.length + 2];
 			System.arraycopy(exps, 0, newExps, 0, exps.length);
-			newExps[exps.length] = l;
+			String[] expStr = this.getExpressionString(expListCtx);
+			newExps[newExps.length - 2] = new Literal(expStr, btToken);
+			newExps[newExps.length - 1] = l;
+			for (int i = 0; i < exps.length; i++)
+			{
+				if (!(exps[i] instanceof VarRef))
+				{
+					expStr[i] = null;
+				}
+			}
+
 			exps = newExps;
 			//可以通过配置查看是否支持debug，2.1再做
 
@@ -916,6 +931,22 @@ public class AntlrProgramBuilder
 			exps[i] = this.parseExpress(ecList.get(i));
 		}
 		return exps;
+	}
+
+	protected String[] getExpressionString(ExpressionListContext expListCtx)
+	{
+		{
+
+			if (expListCtx == null)
+				return new String[0];
+			List<ExpressionContext> ecList = expListCtx.expression();
+			String[] exps = new String[ecList.size()];
+			for (int i = 0; i < ecList.size(); i++)
+			{
+				exps[i] = ecList.get(i).getText();
+			}
+			return exps;
+		}
 	}
 
 	protected Statement parseForSt(ForStContext ctx)
@@ -1249,6 +1280,14 @@ public class AntlrProgramBuilder
 				throw new NativeNotAllowedException(exp.token);
 			}
 			return exp;
+
+		}
+		else if (ctx instanceof AssignGeneralInExpContext)
+		{
+			AssignGeneralInExpContext agc = (AssignGeneralInExpContext) ctx;
+			ExpressionContext expCtx = agc.generalAssignExp().expression();
+			Expression exp = parseExpress(expCtx);
+			return new VarAssignExpression(exp, getBTToken(agc.generalAssignExp().Identifier().getSymbol()));
 
 		}
 		else
