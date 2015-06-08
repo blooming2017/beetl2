@@ -1,7 +1,5 @@
 package org.beetl.core.lab;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +19,7 @@ public class TestUser
 	List friends = null;
 	boolean isOk = false;
 	int id = 0;
+	byte recycle = 1;
 
 	public static enum ORDER
 	{
@@ -49,20 +48,20 @@ public class TestUser
 	public TestUser(String name)
 	{
 		this.name = name;
-		try
-		{
-			bir = new SimpleDateFormat("yyyy-MM-dd").parse("1978-02-14");
-		}
-		catch (ParseException e)
-		{
-			throw new RuntimeException(e.getMessage());
-		}
+		//		try
+		//		{
+		//			bir = new SimpleDateFormat("yyyy-MM-dd").parse("1978-02-14");
+		//		}
+		//		catch (ParseException e)
+		//		{
+		//			throw new RuntimeException(e.getMessage());
+		//		}
 	}
 
 	public String getName()
 	{
-		throw new RuntimeException();
-		//		return name;
+		//		throw new RuntimeException();
+		return name;
 	}
 
 	public void setName(String name)
@@ -158,6 +157,16 @@ public class TestUser
 	public int printUsers(String str)
 	{
 		return 0;
+	}
+
+	public byte getRecycle()
+	{
+		return recycle;
+	}
+
+	public void setRecycle(byte recycle)
+	{
+		this.recycle = recycle;
 	}
 
 	public static List<TestUser> getTestUsers()

@@ -27,8 +27,10 @@
  */
 package org.beetl.ext.fn;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * 
@@ -45,9 +47,10 @@ public class ArrayUtil
 			if (start >= end || start < 0 || end > array.length)
 				throw new RuntimeException("start,end参数设置不正确");
 			Object[] newArray = new Object[end - start];
-			for (int i = start - 1; i < end - 1; i++)
+			int index = 0;
+			for (int i = start; i < end; i++)
 			{
-				newArray[i - start + 1] = array[i];
+				newArray[index++] = array[i];
 			}
 			return newArray;
 		}
@@ -62,13 +65,15 @@ public class ArrayUtil
 			int index = 0;
 			while (iterator.hasNext())
 			{
-				if (i >= start - 1 && i < end - 1)
+				if (i >= start && i < end)
 				{
 					array[index] = iterator.next();
 					index++;
 				}
 				else
 				{
+					if (i >= end)
+						break;
 					iterator.next();
 				}
 				i++;
@@ -206,5 +211,14 @@ public class ArrayUtil
 	public Object[] collection2Array(Collection cols)
 	{
 		return cols.toArray();
+	}
+
+	public static void main(String[] args)
+	{
+		ArrayUtil util = new ArrayUtil();
+		List list = Arrays.asList(new String[]
+		{ "a", "b", "c", "d" });
+		Object[] o = (Object[]) util.range(list.toArray(), 0, 2);
+		int a = 1;
 	}
 }

@@ -16,6 +16,9 @@ public class Test
 	public static void main(String[] args) throws Exception
 	{
 
+		String aa = "abfddfdf";
+		System.out.println(parse(aa));
+
 		ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader();
 		Configuration cfg = Configuration.defaultConfiguration();
 		cfg.setDirectByteOutput(true);
@@ -27,7 +30,9 @@ public class Test
 		for (int i = 0; i < 1; i++)
 		{
 
-			Template t = gt.getTemplate("/org/beetl/core/lab/hello.txt");
+			Template t = gt.getAjaxTemplate("/org/beetl/core/lab/hello.txt", "dd");
+			;
+			t.binding("user", new TestUser(""));
 
 			ByteArrayOutputStream bs = new ByteArrayOutputStream();
 			try
@@ -42,6 +47,43 @@ public class Test
 			System.out.println(new String(bs.toByteArray()));
 
 		}
+
+	}
+
+	public static String parse(String attr)
+	{
+		String q = "\"";
+		StringBuilder sb = new StringBuilder(attr.length() + 10);
+		int start = 0;
+		int end = 0;
+		int index = -1;
+		while ((index = attr.indexOf("${", start)) != -1)
+		{
+			end = attr.indexOf("}", index);
+			if (end == -1)
+				throw new RuntimeException("aa");
+			if (index != 0)
+			{
+				sb.append(q).append(attr.substring(start, index)).append(q).append("+");
+			}
+
+			sb.append("(").append(attr.substring(index + 2, end)).append(")").append("+");
+			start = end + 1;
+		}
+		if (start == 0)
+		{
+			return sb.append(q).append(attr).append(q).toString();
+		}
+		if (start != attr.length())
+		{
+
+			sb.append(q).append(attr.substring(start, attr.length())).append(q);
+		}
+		else
+		{
+			sb.setLength(sb.length() - 1);
+		}
+		return sb.toString();
 
 	}
 
