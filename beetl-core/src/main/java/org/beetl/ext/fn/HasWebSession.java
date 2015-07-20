@@ -1,6 +1,6 @@
 /*
  [The "BSD license"]
- Copyright (c) 2011-2014 Joel Li (李家智)
+ Copyright (c) 2011-2013 Joel Li (李家智)
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -25,69 +25,26 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.beetl.core.statement;
+package org.beetl.ext.fn;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.beetl.core.Context;
-import org.beetl.core.InferContext;
+import org.beetl.core.Function;
 
 /**
- *  if( (xxx = exp)==1);
- * @author joelli
+ * &lt;% hasSession() %>
+ * @author jeolli
  *
  */
-public class VarAssignExpression extends Expression implements IVarIndex
+public class HasWebSession implements Function
 {
 
-	protected int varIndex;
-	public Expression exp;
-
-	public VarAssignExpression(Expression exp, GrammarToken token)
+	public Boolean call(Object[] paras, Context ctx)
 	{
-		super(token);
-		this.exp = exp;
-	}
+		HttpServletRequest requet = (HttpServletRequest) ctx.getGlobal("request");
+		return requet.getSession(false) != null;
 
-	public Object evaluate(Context ctx)
-	{
-		Object o = exp.evaluate(ctx);
-		ctx.vars[varIndex] = o;
-		return o;
-
-	}
-
-	public void infer(InferContext inferCtx)
-	{
-
-		exp.infer(inferCtx);
-		Type oldType = inferCtx.types[varIndex];
-		Type newType = exp.type;
-		if (oldType == null)
-		{
-			inferCtx.types[varIndex] = newType;
-		}
-		else if (oldType.cls == Type.NULLType.cls)
-		{
-			inferCtx.types[varIndex] = newType;
-		}
-		else
-		{
-			// 对于数字类型，很有可能整形变成浮点，解释执行是ok的，但编译执行会出错
-			//同样，对于不同类型，解释执行ok，但编译执行就问题。
-			//解决办法只能是重新infer，或者整个模板都解释执行，或者提示dynamic object
-			inferCtx.types[varIndex] = newType;
-
-		}
-
-	}
-
-	@Override
-	public void setVarIndex(int index) {
-		this.varIndex = index;
-	}
-
-	@Override
-	public int getVarIndex() {
-		return varIndex;
 	}
 
 }

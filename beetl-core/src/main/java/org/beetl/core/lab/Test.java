@@ -15,38 +15,32 @@ public class Test
 {
 	public static void main(String[] args) throws Exception
 	{
-
-		String aa = "abfddfdf";
-		System.out.println(parse(aa));
-
-		ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader();
-		Configuration cfg = Configuration.defaultConfiguration();
-		cfg.setDirectByteOutput(true);
-		cfg.getResourceMap().put("RESOURCE.autoCheck", "true");
-		GroupTemplate gt = new GroupTemplate(resourceLoader, cfg);
-		cfg.setStatementStart("<%");
-		cfg.setStatementEnd("%>");
-		gt.registerFunctionPackage("test", new TestUser(""));
-		for (int i = 0; i < 1; i++)
-		{
-
-			Template t = gt.getAjaxTemplate("/org/beetl/core/lab/hello.txt", "dd");
-			;
-			t.binding("user", new TestUser(""));
-
-			ByteArrayOutputStream bs = new ByteArrayOutputStream();
-			try
-			{
-				t.renderTo(bs);
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace();
-			}
-
-			System.out.println(new String(bs.toByteArray()));
-
-		}
+				ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader();
+				Configuration cfg = Configuration.defaultConfiguration();
+				cfg.setDirectByteOutput(true);
+				cfg.getResourceMap().put("RESOURCE.autoCheck", "true");
+				GroupTemplate gt = new GroupTemplate(resourceLoader, cfg);
+				cfg.setStatementStart("<%");
+				cfg.setStatementEnd("%>");
+				gt.registerFunctionPackage("test", new TestUser(""));
+				for (int i = 0; i < 1; i++)
+				{
+		
+					Template t = gt.getTemplate("/org/beetl/core/lab/hello.txt");
+					
+					ByteArrayOutputStream bs = new ByteArrayOutputStream();
+					try
+					{
+						t.renderTo(bs);
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+					}
+		
+					System.out.println(new String(bs.toByteArray()));
+		
+				}
 
 	}
 

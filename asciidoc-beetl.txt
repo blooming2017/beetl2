@@ -1,4 +1,4 @@
-﻿Beetl2.2使用说明书20150305
+﻿Beetl2.2使用说明书20150720
 ===================
 李家智 <xiandafu@126.com>
 :toc:
@@ -11,7 +11,7 @@
 
 
 == 什么是Beetl ==
-Beetl目前版本是2.2.0,大小680K，从开发至今有4年历史。相对于其他java模板引擎，具有功能齐全，语法直观,性能超高，以及编写的模板容易维护等特点。使得开发和维护模板有很好的体验。是新一代的模板引擎。总得来说，它的特性如下：
+Beetl目前版本是2.2.4,大小697K。相对于其他java模板引擎，具有功能齐全，语法直观,性能超高，以及编写的模板容易维护等特点。使得开发和维护模板有很好的体验。是新一代的模板引擎。总得来说，它的特性如下：
 
 - 功能完备：同主流的java模板引擎相比，Beetl具有绝大多数功能。适用于*各种应用场景*，从对响应速度有很高要求的大网站到功能繁多的CMS管理系统都适合。Beetl本身还具有很多独特功能来完成模板编写和维护，这是其他模板引擎所不具有的。
 - 非常简单：类似Javascript语法和习俗，只要半小时就能通过半学半猜完全掌握用法。拒绝其他模板引擎那种非人性化的语法和习俗。同时也能支持html 标签，使得开发CMS系统比较容易
@@ -22,34 +22,26 @@ Beetl目前版本是2.2.0,大小680K，从开发至今有4年历史。相对于�
 
 .关于性能
 **********************************************************************
-通过与主流模板引擎Freemaker，Vecloity以及JSP对比，Beetl均远高于前面三个，这是因为宏观上，通过了优化的渲染引擎，IO的二进制输出，字节码属性访问增强，微观上，通过一维数组保存上下文Context,静态文本合并处理，通过重复使用字节数组来防止java频繁的创建和销毁数组，还使用模板缓存，运行时优化等方法。详情参考附录
+通过与主流模板引擎Freemarker，Vecloity以及JSP对比，Beetl6倍于Freemarker，2倍于JSP。这是因为宏观上，通过了优化的渲染引擎，IO的二进制输出，字节码属性访问增强，微观上，通过一维数组保存上下文Context,静态文本合并处理，通过重复使用字节数组来防止java频繁的创建和销毁数组，还使用模板缓存，运行时优化等方法。详情参考附录
 **********************************************************************
 
 .独特功能
 **********************************************************************
 Beetl有些功能是发展了10多年的模板引擎所不具备的，这些功能非常利于模板的开发和维护，如下
 
-1. 自定义占位符和控制语句起始符号，这有利于减小模板语法对模板的倾入性，比如在html模板中，如果定义控制语句符号是`<!--:和 -->`,那么，大部分模板文件都能同过浏览器打开。有的使用者仅仅采用了单个符号@ 以及回车换号作为控制语句起始符号，这又能提高开发效率
+1. 自定义占位符和控制语句起始符号，这有利于减小模板语法对模板的倾入性，比如在html模板中，如果定义控制语句符号是`<!--:和 -->`,那么，大部分模板文件都能通过浏览器打开。有的使用者仅仅采用了单个符号@ （或者单个符号“～”）以及回车换号作为控制语句起始符号，这又能提高开发效率
 2. 可单独测试的模板。无需真正的控制层和模型层，Beetl的模板就可以单独开发和*测试*
 3. 同时支持较为松散的MVC和严格的MVC，如果在模板语言里嵌入计算表达式，复杂条件表达式，以及函数调用有干涉业务逻辑嫌疑，你可以禁止使用这些语法。
 4. 强大的安全输出，通过安全输出符号！，能在模板变量，变量属性引用，for循环，占位符输出，try-catch中等各个地方提供安全输出，保证渲染正常
-5. 模板变量：运行将模板的某一部分输出像js那样赋值个一个变量，稍后再处理。利用模板变量能完成非常复杂的页面布局（简单的布局可使用layout标签函数)
+5. 模板变量：运行将模板的某一部分输出像js那样赋值给一个变量，稍后再处理。利用模板变量能完成非常复杂的页面布局（简单的布局可使用include,layout标签函数)
 6. 类型推测，能在运行的时候推测模板变量类型，从而优化性能，也可以通过注解的方法显示的说明模板变量属性（这是非必须的，但有助于IDE自动提示功能）
 7. 可插拔的设计，错误信息提示，模板引擎缓存机制，模板资源管理，本地调用的安全管理器,严格MVC限制，模板引擎本身都有默认的实现，但又完全可以自定义以适合特定需求
-8. 增强的语法，如for-elsefor, select-case，安全输出符号! 等，这些语法特别适合模板开发
+8. 增强的语法，如for-elsefor, select-case，安全输出符号!,省略的三元表达式 等，这些语法特别适合模板开发
 9. 局部渲染技术，结合现在js的ajax技术。
 10. 性能超高,具有最快的模板解释引擎，同时，又有较低的CPU消耗。5-6倍于国内使用的Freemaker。适合各类模板应用，如代码生成工具，CMS系统，普通网站，超高访问量的门户系统，和富客户端JS框架整合的后台管理应用
 **********************************************************************
 
-.新手如何开始
-**********************************************************************
-需要通读基本用法，大部分都是讲解语法，而语法跟js很接近，所以可以快速预览，但Beetl是针对模板设计，
-所以像安全输出，标签和html标签，全局变量，临时变量和共享变量，布局技术，以及直接调用java代码等还需要认真读一遍。
 
-如果从事web开发，还需要阅读web集成里的第一节"web提供的全局变量"，如果web里还使用ajax技术，可以阅读"整合ajax的局部渲染技术"
-
-
-**********************************************************************
 
 .联系作者
 **********************************************************************
@@ -69,10 +61,28 @@ Beetl主页：ibeetl.com
 
 **********************************************************************
 
+.资助Beetl
+**********************************************************************
+
+- 官网有捐助账号，支付宝的，如果有大额或者希望捐助后不留名，请先联系我。
+
+**********************************************************************
+
 
 
 
 == 基本用法 ==
+
+=== 新手如何开始 ===
+
+- 需要通读基本用法，大部分都是讲解语法，而语法跟js很接近，所以可以快速预览，但Beetl是针对模板设计，
+所以像安全输出，标签和html标签，全局变量，临时变量和共享变量，布局技术，以及直接调用java代码等还需要认真读一遍。
+
+- 如果从事web开发，还需要阅读web集成里的第一节“web提供的全局变量”，如果web里还使用ajax技术，可以阅读“整合ajax的局部渲染技术”。
+
+- 包含有spring,jfinal,jodd,struts 等demo可以作为参考学习用 http://ibeetl.com/community/?/article/4 
+
+- 如果有问题，可以在ibeetl.com上提问，或者进入beetl QQ群提问,群号是219324263
 
 
 === 从GroupTemplate开始 ===
@@ -97,7 +107,7 @@ Beetl的核心是GroupTemplate，创建GroupTemplate需要俩个参数，一个�
 - WebAppResourceLoader：用于webapp集成，假定模板根目录就是WebRoot目录
 
 
-代码第5行将变量name传入模板里，其值是"Beetl"。
+代码第5行将变量name传入模板里，其值是“Beetl”。
 代码第6行是渲染模板，得到输出，template提供了多种获得渲染输出的方法，如下
 
 - tempalte.render() 返回渲染结果，如本例所示
@@ -106,7 +116,7 @@ Beetl的核心是GroupTemplate，创建GroupTemplate需要俩个参数，一个�
 
 *************************************************
 1. 关于如何使用模板资源加载器，请参考下一节
-2.  如何对模板进行配置，请参考下一节
+2. 如何对模板进行配置，请参考下一节
 *************************************************
 
 
@@ -316,7 +326,7 @@ var c = ${a}+"beetl"; //应该是var c = a+"beetl"
 
 每次有人问我如上例子为啥不能运行的时候，我总是有点憎恶velocity 带来的这种非人性语法
 
-定界符号里是表达式，如果表达式跟定界符有冲突，可以在表达式里用 "\" 符号，如
+定界符号里是表达式，如果表达式跟定界符有冲突，可以在表达式里用 “\” 符号，如
 
 [source,javascript]
 
@@ -471,18 +481,18 @@ var content = {
 
 属性引用是模板中的重要一部分，beetl支持属性引用如果javascript的支持方式一样，如下
 
-1	 Beetl支持通过"."号来访问对象的的属性，如果javascript一样。如果User对象有个getName()方法，那么在模板中，可以通过${xxx.name}来访问
+1	 Beetl支持通过”.”号来访问对象的的属性，如果javascript一样。如果User对象有个getName()方法，那么在模板中，可以通过${xxx.name}来访问
 
 2   如果模板变量是数组或者List类，这可以通过[] 来访问，如${userList[0]}
 
-3   如果模板变量是Map类，这可以通过[]来访问，如${map["name"]},如果key值是字符串类型，也可以使用${map.name}.但不建议这么使用，因为会让模板阅读者误以为是一个Pojo对象
+3   如果模板变量是Map类，这可以通过[]来访问，如${map[“name”]},如果key值是字符串类型，也可以使用${map.name}.但不建议这么使用，因为会让模板阅读者误以为是一个Pojo对象
 
-4   Beetl也支持Generic Get方式，即如果对象有一个public Object get(String key)方法，可以通过"."号或者[]来访问，譬如
-${activityRecord.name}或者${activityRecord["name"] }都将调用activityRecord的 get(String key)方法。如果对象既有具体属性，又有Generic get（这种模型设计方式是不值得鼓励），则以具体属性优先级高.
+4   Beetl也支持Generic Get方式，即如果对象有一个public Object get(String key)方法，可以通过”.”号或者[]来访问，譬如
+${activityRecord.name}或者${activityRecord[“name”] }都将调用activityRecord的 get(String key)方法。如果对象既有具体属性，又有Generic get（这种模型设计方式是不值得鼓励），则以具体属性优先级高.
 
-5  Beetl也可以通过[]来引用属性，如${user["name"]} 相当于${user.name}.这跟javascript保持一致。但建议不这么做，因为容易让阅读模板的人误认为这是一个Map类型
+5  Beetl也可以通过[]来引用属性，如${user[“name”]} 相当于${user.name}.这跟javascript保持一致。但建议不这么做，因为容易让阅读模板的人误认为这是一个Map类型
 
-6 Beetl 还可以定位额外的对象属性，而无需更改java对象，这叫着虚拟属性，如，对于所有集合，数组，都有共同的虚拟熟悉size.虚拟属性是".~"+虚拟1属性名
+6 Beetl 还可以定位额外的对象属性，而无需更改java对象，这叫着虚拟属性，如，对于所有集合，数组，都有共同的虚拟熟悉size.虚拟属性是“.~”+虚拟1属性名
 
 
 [source,java]
@@ -738,7 +748,7 @@ select 后也不需要一个变量，这样case 后的逻辑表达式将决定�
 
 [source,javascript]
 ----------------------------
-select(){
+select {
 	case boolExp,orBoolExp2:
 		doSomething();
 	
@@ -753,7 +763,7 @@ select(){
 ----------------------------
 <% 
 var b = 1;
-select(){
+select{
 	case b<1,b>10:
 		print("it's out of range");
 		break;
@@ -867,15 +877,20 @@ Beetl内置函数请参考附录，以下列出了常用的函数
 
 - decode  一个简化的if else 结构，如 decode(a,1,"a=1",2,"a=2","不知道了")},如果a是1，这decode输出"a=1",如果a是2，则输出"a==2",
 如果是其他值，则输出"不知道了"
-- debug 在控制台输出debug指定的对象以及所在模板文件以及模板中的行数，如debug(1),则输出1 [在3行@/org/beetl/core/lab/hello.txt]
+- debug 在控制台输出debug指定的对象以及所在模板文件以及模板中的行数，如debug(1),则输出1 [在3行@/org/beetl/core/lab/hello.txt],也可以输出多个，如debug("hi",a),则输出hi,a=123,[在3行@/org/beetl/core/lab/hello.txt]
 
 - parseInt 将数字或者字符解析为整形  如 parseInt("123");
-
+- parseLong 将数字或者字符解析为长整形  如 parseInt("123");
 - parseDouble 将数字或者字符解析为浮点类型 如parseDouble("1.23")
 
 - range 接收三个参数，初始值，结束值，还有步增（可以不需要，则默认为1），返回一个Iterator，常用于循环中，如for(var i in range(1,5)) {print(i)},将依次打印1234.
 
 - flush 强制io输出
+
+- json，将对象转成json字符串，如 var data = json(userList)  可以跟一个序列化规则 如,var data = json(userList,"[*].id:i"),具体参考https://git.oschina.net/xiandafu/beetl-json
+
+
+
 
 
 
@@ -896,7 +911,7 @@ Beetl内置函数请参考附录，以下列出了常用的函数
 
 可以在!后增加一个常量（字符串，数字类型等），或者另外一个变量，方法，本地调用，作为默认输出，譬如：
 
-${user.wife.name!"单身"}，如果user为null，或者user.wife为null，或者user.wife.name为null，输出"单身"
+${user.wife.name!”单身”}，如果user为null，或者user.wife为null，或者user.wife.name为null，输出”单身”
 
 譬如
 
@@ -908,7 +923,7 @@ ${user.birthday!@System.constants.DefaultBir}， 表示如果user为null，或�
 
 这需要使用格式${!(变量)},这样，在变量引用发生任何异常情况下，都不作输出，譬如
 
-${!(user.name)},，beetl将会调用user.getName()方法，如果发生异常，beetl将不会忽略此异常，继续渲染
+${!(user.name)},，beetl将会调用user.getName()方法，如果发生异常，beetl将会忽略此异常，继续渲染
 
 
 值得注意的是，在变量后加上!不仅仅可以应用于占位符输出(但主要是应用于占位符输出)，也可以用于表达式中，如：
@@ -1037,7 +1052,7 @@ flag!0 取值是这样的，如果flag不存在，则为0，如果存在，则�
 
 <% var date = date(); %>
 Today is ${date,dateFormat="yyyy-MM-dd"}.
-Today is $date,dateFormat$
+Today is ${date,dateFormat}
 salary is ${salary,numberFormat="##.##"}
 
 ----------------------------
@@ -1049,7 +1064,7 @@ Beetl也允许为指定的java class设定格式化函数，譬如已经内置�
 [source,javascript]
 ----------------------------
 
-${date,"yyyy-MM-dd"}.
+${date,“yyyy-MM-dd”}.
 
 ----------------------------
 
@@ -1108,7 +1123,7 @@ footer
 
 第2行layoutContent 是layout标签体{}渲染后的结果
 
-关于layout标签，参考高级主体布局
+关于layout标签，参考高级主题布局
 
 Beetl内置了另外一个标签是include,允许 include 另外一个模板文件
 
@@ -1121,7 +1136,7 @@ include("/inc/header.html"){}
 
 在标签中，{} 内容将依据标签的实现而执行，layout标签将执行{}中的内容，而include标签则忽略标签体内容。
 
-关于如何实现标签函数，请参考高级主体,如下是一个简单的的标签函数：
+关于如何实现标签函数，请参考高级主题,如下是一个简单的的标签函数：
 
 [source,java]
 ----------------------------
@@ -1149,8 +1164,8 @@ Beetl 也支持HTML tag形式的标签， 区分beetl的html tag 与 标准html 
 [source,javascript]
 ----------------------------
 
-<#footer style="simple"/>
-<#richeditor id="rid" name="rname"  maxlength="${maxlength}"> ${html} …其他模板内容   </#richdeitor>
+<#footer style=”simple”/>
+<#richeditor id=”rid” path="${ctxPath}/upload" name=”rname”  maxlength=”${maxlength}”> ${html} …其他模板内容   </#richdeitor>
 <#html:input  id=’aaaa’ />
 
 ----------------------------
@@ -1177,13 +1192,13 @@ Beetl 也支持HTML tag形式的标签， 区分beetl的html tag 与 标准html 
 
 - HTML标签支持namespace，如html:input,则beetl将寻找${root}/html/input.tag.
 
-- 可以在自定义标签里引用标签体的内容，标签体可以是普通文本，beetl模板，以及嵌套的自定义标签等。如上<#richeditor 标签体里，可用"tagBody"来引用
+- 可以在自定义标签里引用标签体的内容，标签体可以是普通文本，beetl模板，以及嵌套的自定义标签等。如上<#richeditor 标签体里，可用“tagBody”来引用
 
-- HTML自定义标签 的属性值均为字符串 如<#input value="123" />,在input.tag文件里 变量value的类型是字符串
+- HTML自定义标签 的属性值均为字符串 如<#input value=”123” />,在input.tag文件里 变量value的类型是字符串
 
-- 可以在属性标签里引用beetl变量，如<#input value="${user.age}" />，此时在input.tag里，value的类型取决于user.age
+- 可以在属性标签里引用beetl变量，如<#input value=”${user.age}” />，此时在input.tag里，value的类型取决于user.age
 
-- 在属性里引用beetl变量，不支持格式化，如<#input value="${user.date,‘yyyy-MM-dd’ }" />,如果需要格式化，需要在input.tag文件里自行格式化
+- 在属性里引用beetl变量，不支持格式化，如<#input value=”${user.date,‘yyyy-MM-dd’ }” />,如果需要格式化，需要在input.tag文件里自行格式化
 
 - html tag 属性名将作为 其对应模板的变量名。
 
@@ -1300,7 +1315,7 @@ var属性的值可以是个以逗号分开的变量名列表，如var="total,cus
 [source,javascript]
 ----------------------------
 
-${@user.getMaxFriend("lucy")}
+${@user.getMaxFriend(“lucy”)}
 ${@user.maxFriend[0].getName()}
 ${@com.xxxx.constants.Order.getMaxNum()}
 ${@com.xxxx.User$Gender.MAN}
@@ -1320,7 +1335,7 @@ var max = @com.xxxx.constants.Order.MAX_NUM;
 
 - 请按照java规范写类名和方法名，属性名。这样便于beetl识别到底调用的是哪个类，哪个方法。否则会抛出错误
 
-- 可以省略包名，只用类名。beetl将搜索包路径找到合适的类（需要设置配置"IMPORT_PACKAGE=包名.;包名."，包名后需要跟一个".", 或者调用Configuration.addPkg)方法具体请参考附件配置文件说明
+- 可以省略包名，只用类名。beetl将搜索包路径找到合适的类（需要设置配置“IMPORT_PACKAGE=包名.;包名.”，包名后需要跟一个“.”, 或者调用Configuration.addPkg)方法具体请参考附件配置文件说明
 
 - 内部类（包括枚举）访问同java一样，如User类有个内部枚举类Gender，访问是User$Gender
 
@@ -2297,6 +2312,11 @@ public class DefaultNativeSecurityManager implements NativeSecurityManager
 	@Override
 	public boolean permit(String resourceId, Class c, Object target, String method)
 	{
+		if (c.isArray())
+		{
+			//允许调用，但实际上会在在其后调用中报错。不归此处管理
+			return true;
+		}
 		String name = c.getSimpleName();
 		String pkg = c.getPackage().getName();
 		if (pkg.startsWith("java.lang"))
@@ -2317,7 +2337,7 @@ public class DefaultNativeSecurityManager implements NativeSecurityManager
 
 === 注册全局共享变量 ===
 
-GroupTemplate.setSharedVars(Map<String, Object> sharedVars)
+groupTemplate.setSharedVars(Map<String, Object> sharedVars)
 
 === 布局 ===
 
@@ -2360,6 +2380,9 @@ layoutContent 是默认变量，也可以改成其他名字，具体请参考lay
  include("/inc/header.html",{title:'这是一个测试页面',user:user}){} %> 
 
 -------------------------
+
+这样，title和user成为全局变量，能被header.html 及其子页面引用到
+
 
 -  继承布局：采用模板变量和include
 
@@ -2668,15 +2691,16 @@ return a+1;
 
 Web集成模块向模板提供web标准的变量，做如下说明
 
+-  request 中的所有attribute.在模板中可以直接通过attribute name 来引用，如在controller层 request.setAttribute("user",user),则在模板中可以直接用${user.name} . 
+
 - session  提供了session会话，模板通过session["name"],或者session.name 引用session里的变量
 
-- request  标准的HTTPSerlvetRequest,可以在模板里引用request属性（getter），如${request.url}。
+- request  标准的HTTPSerlvetRequest,可以在模板里引用request属性（getter），如${request.requestURL}。
 
 - ctxPath  Web应用ContextPath
 
-- servlet  是WebVariable的实例，包含了HTTPSession,HTTPSerlvetRequest,HTTPSerlvetResponse.三个属性，模板中可以通过request.response,session 来引用，如 ${serlvet.request.url};
+- servlet  是WebVariable的实例，包含了HTTPSession,HTTPSerlvetRequest,HTTPSerlvetResponse.三个属性，模板中可以通过request.response,session 来引用，如 ${serlvet.request.requestURL};
 
--  request 中的所有attribute.在模板中可以直接通过attribute name 来引用，如在controller层 request.setAttribute("user",user),则在模板中可以直接用${user.name}
 
 - 所有的GroupTemplate的共享变量
 
@@ -2840,8 +2864,9 @@ public class WebRender
 protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		
-		response.setContentType("text/html;charset=UTF-8");			
-		//request.setAttribute ....
+		response.setContentType("text/html;charset=UTF-8");
+		//模板直接访问users			
+		request.setAttribute("users",service.getUsers());
 		ServletGroupTemplate.instance().render("/index.html", request, response);
 
 	
@@ -2879,9 +2904,27 @@ GroupTemplate group = config.getGroupTemplate();
 
 ----------------------------
 
+Controller代码如下:
+[source,java]
+----------------------------
+@RequestMapping(value = "/", method = RequestMethod.GET)
+public ModelAndView index(HttpServletRequest req) {
+	ModelAndView view = new ModelAndView("/index");
+	//total 是模板的全局变量，可以直接访问
+	view.addObject("total",service.getCount());
+  return view;
+}
+
+----------------------------
+
+
+https://git.oschina.net/xiandafu/beetl-spring-sample  有完整例子
+
 === SpringMVC集成高级 ===
 
 spring集成还允许注册被spring容器管理的Function，Tag等，也还允许配置多个视图解析器等功能
+
+
 
 [source,xml]
 ----------------------------
@@ -2972,6 +3015,7 @@ public class TestTag extends Tag {
 			<value>/template/**</value>
 		</list>
 	</property>
+	<property name="suffix" value=".btl"/>
 	<property name="contentType" value="text/html;charset=UTF-8"/>
 	<property name="order" value="0"/>
 	<!-- 多GroupTemplate，需要指定使用的bean -->
@@ -2998,6 +3042,7 @@ public class TestTag extends Tag {
 <bean name="JSPViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 	<!-- 注意JSP的这个视图解析器order必须在最后 -->
 	<property name="order" value="256"/>
+	<!-- beetl配置不支持前缀，这不同于jsp 和 freemaker -->
 	<property name="prefix" value="/WEB-INF/"/>
 	<property name="suffix" value=".jsp"/>
 	<property name="contentType" value="text/html;charset=UTF-8"/>
@@ -3024,9 +3069,67 @@ Beetl视图解析器属性同spring自带的视图解析器一样，支持conten
 
 
 
+
+
 === Jodd集成 ===
 
-只需要在Action里返回"beetl:....."就可以了，冒号后面是模板路径，请以/开头，如下例子：
+需要配置web.xml,将所有请求交给jodd处理，参考:http://jodd.org/doc/madvoc/setup.html
+
+[source,xml]
+----------------------------
+<filter>
+	<filter-name>madvoc</filter-name>
+	<filter-class>jodd.madvoc.MadvocServletFilter</filter-class>
+	<init-param>
+			<param-name>madvoc.webapp</param-name>
+			<param-value>test.MyWebApplication</param-value>
+	  </init-param>
+    <init-param>
+		<param-name>madvoc.configurator</param-name>
+		<param-value>test.MyAutomagicMadvocConfigurator</param-value>
+	</init-param>
+        
+</filter>
+<filter-mapping>
+	<filter-name>madvoc</filter-name>
+	<url-pattern>/*</url-pattern>      
+</filter-mapping>
+
+----------------------------
+
+
+MyWebApplication 和 MyAutomagicMadvocConfigurator 需要自己参照如下例子写一个，前者用来设置beetl作为视图渲染，后者配置Jodd不要扫描beetl struts集成里引用的struts类
+
+
+[source,java]
+----------------------------
+public class MyAutomagicMadvocConfigurator extends AutomagicMadvocConfigurator {
+	public MyAutomagicMadvocConfigurator(){
+		super();
+		//不扫描beetl 里jar文件里的action和result，否则，会扫描StrutsResultSupport不相干的class
+		this.rulesJars.exclude("**/*beetl*.jar");
+
+		
+	}
+}
+----------------------------
+
+
+[source,java]
+----------------------------
+public class MyWebApplication  extends WebApplication{
+     @Override
+     protected void init(MadvocConfig madvocConfig, ServletContext servletContext) {       
+		 //设置默认
+         madvocConfig.setDefaultActionResult(BeetlActionResult.class);       
+
+     }
+ }
+
+----------------------------
+
+
+最后，可以写Action了，浏览器输入/index.html,jodd将执行world方法，并渲染ok.html模板。如果你想配置GroupTemplate，正如其他集成框架一样，只需要写一个beetl.properties 即可。
 
 [source,java]
 ----------------------------
@@ -3035,93 +3138,18 @@ public class IndexAction {
 	
      @Out
      String value;
-
      @Action("/index.html")
      public String world() {
         
          value = "Hello World!";
-         return "beetl:/ok.html";
+         return "/ok.html";
      }
 }
 
-
 ----------------------------
 
-这样，将访问ROOT/ok.html的模板。如果你想配置GroupTemplate，正如其他集成框架一样，只需要写一个beetl.properties 即可。
+https://git.oschina.net/xiandafu/beetl-jodd-sample 有完整例子
 
-如下是集成的类实现，你也可以定制自己的集成方式
-
-[source,java]
-----------------------------
-package org.beetl.ext.jodd;
-
-import java.io.IOException;
-
-import jodd.madvoc.ActionRequest;
-import jodd.madvoc.result.ActionResult;
-
-import org.beetl.core.Configuration;
-import org.beetl.core.GroupTemplate;
-import org.beetl.core.resource.WebAppResourceLoader;
-import org.beetl.ext.web.WebRender;
-
-public class BeetlActionResult implements ActionResult
-{
-
-	public static final String NAME = "beetl";
-	GroupTemplate groupTemplate = null;
-
-	public BeetlActionResult()
-	{
-
-		try
-		{
-
-			Configuration cfg = Configuration.defaultConfiguration();
-			WebAppResourceLoader resourceLoader = new WebAppResourceLoader();
-			groupTemplate = new GroupTemplate(resourceLoader, cfg);
-
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("加载GroupTemplate失败", e);
-		}
-
-	}
-
-	@Override
-	public void render(ActionRequest actionRequest, Object resultValue) throws Exception
-	{
-		
-		WebRender render = new WebRender(groupTemplate);
-		render.render((String) resultValue, actionRequest.getHttpServletRequest(),
-				actionRequest.getHttpServletResponse());
-
-	}
-
-	@Override
-	public String getResultType()
-	{
-		return NAME;
-	}
-
-	@Override
-	public Class getResultValueType()
-	{
-
-		return String.class;
-	}
-
-	@Override
-	public void init()
-	{
-
-	}
-
-}
-
-
-----------------------------
 
 
 === JFinal集成 ===
@@ -3144,6 +3172,23 @@ public class DemoConfig extends JFinalConfig
 
 ----------------------------
 
+业务逻辑代码:
+
+[source,java]
+----------------------------
+	public void modify(){
+		int artId = getParaToInt(0, -1);
+		setAttr("title", "修改文章");
+		List<Cate> cateLists = Cate.getAllCate();
+		//模板里访问cateLists,atr,
+		setAttr("cateLists", cateLists);
+		setAttr("art", Article.dao.findById(artId));
+		render("/modify.html");
+	}
+
+----------------------------
+
+
 BeetlRenderFactory 默认使用FileResourceLoader ，其根目录位于WebRoot目录下，如果你需要修改到别的目录，可以设置配置文件，如
 
 
@@ -3154,113 +3199,12 @@ RESOURCE.root= /WEB-INF/template/
 ----------------------------
 
 
-
-如下是 BeetlRenderFactory 源码
-
-[source,java]
-----------------------------
-package org.beetl.ext.jfinal;
-
-import java.io.File;
-import java.io.IOException;
-
-import org.beetl.core.Configuration;
-import org.beetl.core.GroupTemplate;
-import org.beetl.core.resource.FileResourceLoader;
-
-import com.jfinal.render.IMainRenderFactory;
-import com.jfinal.render.Render;
-
-public class BeetlRenderFactory implements IMainRenderFactory
-{
-
-	public static String viewExtension = ".html";
-	public static GroupTemplate groupTemplate = null;
-
-	static
-	{
-		try
-		{
-
-			Configuration cfg = Configuration.defaultConfiguration();
-			WebAppResourceLoader resourceLoader = new WebAppResourceLoader();
-			groupTemplate = new GroupTemplate(resourceLoader, cfg);
-
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("加载GroupTemplate失败", e);
-		}
-	}
-
-	public Render getRender(String view)
-	{
-		return new BeetlRender(groupTemplate, view);
-	}
-
-	public String getViewExtension()
-	{
-		return viewExtension;
-	}
-
-}
-
-----------------------------
-
-
-
-BeetlRender 继承了Jfinal Render类，内容如下：
-
-
-[source,java]
-----------------------------
-package org.beetl.ext.jfinal;
-
-import org.beetl.core.GroupTemplate;
-import org.beetl.core.exception.BeetlException;
-import org.beetl.ext.web.WebRender;
-
-import com.jfinal.render.Render;
-import com.jfinal.render.RenderException;
-
-public class BeetlRender extends Render
-{
-	GroupTemplate gt = null;
-	private transient static final String encoding = getEncoding();
-	private transient static final String contentType = "text/html; charset=" + encoding;
-
-	public BeetlRender(GroupTemplate gt, String view)
-	{
-		this.gt = gt;
-		this.view = view;
-	}
-
-	@Override
-	public void render()
-	{
-
-		try
-
-		{
-			response.setContentType(contentType);
-			WebRender webRender = new WebRender(gt);
-			webRender.render(view, request, response);
-
-		}
-		catch (BeetlException e)
-		{
-			throw new RenderException(e);
-		}
-
-	}
-
-}
-----------------------------
+https://git.oschina.net/xiandafu/beetl-jfinal-sample  有完整例子，采用jfinal+beetl写的一个博客系统
 
 
 
 
-=== Nuts集成 ===
+=== Nutz集成 ===
 
 Nutz集成提供了 BeetlViewMaker ，实现了 ViewMaker方法，如下代码
 
@@ -3279,85 +3223,7 @@ public class HelloBeetl {
 
 ----------------------------
 
-代码第三行使用前缀beetl，这表示使用BeetlViewMaker.如下椒BeetlViewMaker实现
 
-[source,java]
-----------------------------
-package org.beetl.ext.nutz;
-
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.beetl.core.Configuration;
-import org.beetl.core.GroupTemplate;
-import org.beetl.core.resource.WebAppResourceLoader;
-import org.beetl.ext.web.WebRender;
-import org.nutz.ioc.Ioc;
-import org.nutz.mvc.View;
-import org.nutz.mvc.ViewMaker;
-import org.nutz.mvc.view.AbstractPathView;
-
-/**
- * Beelt for Nutz
- * 
- * @author wendal,joelli
- * 
- */
-public class BeetlViewMaker implements ViewMaker
-{
-
-	public GroupTemplate groupTemplate;
-	private boolean inited;
-
-	public void init()
-	{
-		if (inited)
-			return;
-
-		Configuration cfg;
-		try
-		{
-			cfg = Configuration.defaultConfiguration();
-			WebAppResourceLoader resourceLoader = new WebAppResourceLoader();
-			groupTemplate = new GroupTemplate(resourceLoader, cfg);
-			inited = true;
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("加载GroupTemplate失败", e);
-		}
-
-	}
-
-	public void depose()
-	{
-		if (groupTemplate != null)
-			groupTemplate.close();
-	}
-
-	public View make(Ioc ioc, String type, String value)
-	{
-		if (!inited)
-			init();
-		if ("beetl".equals(type))
-			return new AbstractPathView(value) {
-				@SuppressWarnings("unchecked")
-				public void render(HttpServletRequest req, HttpServletResponse resp, Object obj) throws Throwable
-				{
-
-					String child = evalPath(req, obj);
-					WebRender render = new WebRender(groupTemplate);
-					render.render(child, req, resp);
-
-				}
-			};
-		return null;
-	}
-}
-
-----------------------------
 
 
 === Struts2集成 ===
@@ -3369,90 +3235,24 @@ public class BeetlViewMaker implements ViewMaker
 .......
 <result-types>
 	<result-type name="beetl"
-		class="org.beetl.ext.struts2.Struts2BeetlActionResult" default="true" />
+		                class="org.beetl.ext.struts2.Struts2BeetlActionResult" default="true" >
+		        	<param name="contentType">text/html; charset=UTF-8</param>
+	</result-type>
 </result-types>
 
-<action name="HelloWorld" class="example.HelloWorld">
+<action name="HelloWorld" class="com.beetl.struts.HelloWorld">
     <result>/hello.html</result>
+</action>
+<action name="Ajax" class="com.beetl.struts.AjaxHtml">
+	<result>/table.html#table</result>
 </action>
 ........
 </package>
 ----------------------------
 
 该类会根据struts配置文件获取模板，如上例的hello.html,并将formbean的属性，以及request属性作为全局变量传递给模板
-Struts2BeetlActionResult 集成代码如下：
-[source,java]
-----------------------------
-public class Struts2BeetlActionResult extends StrutsResultSupport
-{
 
-	
-	ReflectionProvider reflectionProvider = null;
-	public static GroupTemplate groupTemplate;
-	static {
-		Configuration cfg;
-		try
-		{
-			cfg = Configuration.defaultConfiguration();
-			WebAppResourceLoader resourceLoader = new WebAppResourceLoader();
-			groupTemplate = new GroupTemplate(resourceLoader, cfg);
-			
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("加载GroupTemplate失败", e);
-		}
-	}
-
-	@Inject
-	public void setReflectionProvider(ReflectionProvider prov)
-	{
-		this.reflectionProvider = prov;
-	}
-
-	protected void doExecute(String locationArg, ActionInvocation invocation) throws Exception
-	{
-
-		ActionContext ctx = invocation.getInvocationContext();
-
-		HttpServletRequest req = (HttpServletRequest) ctx.get(ServletActionContext.HTTP_REQUEST);
-		HttpServletResponse rsp = (HttpServletResponse) ctx.get(ServletActionContext.HTTP_RESPONSE);
-
-		if (!locationArg.startsWith("/"))
-		{
-			String base = ResourceUtil.getResourceBase(req);
-			locationArg = base + "/" + locationArg;
-		}
-
-		Template template = groupTemplate.getTemplate(locationArg);
-		
-		Object action = 	invocation.getAction();
-		Map<String, Object> values = reflectionProvider.getBeanMap(action);
-		
-		WebRender render = new WebRender(groupTemplate){
-			protected void modifyTemplate(Template template, String key, HttpServletRequest request,
-					HttpServletResponse response, Object... args)
-			{
-				Map model = (Map) args[0];
-
-				for (Object o : model.entrySet())
-				{
-					Entry entry = (Entry) o;
-					String name = (String) entry.getKey();
-					Object value = entry.getValue();
-					template.binding(name, value);
-				}
-			}
-		};
-		render.render(locationArg, req, rsp,values);
-	
-
-	}	
-
-	
-}
-----------------------------
-
+https://git.oschina.net/xiandafu/beetl-struts2-sample  有完整例子
 
 .郑重申明
 **********************************************************************
@@ -3528,7 +3328,7 @@ var session= {admin:{id:1,name:'admin'}};
 当前页面<span id="current">${page!1}</span><span style="width:20px"></span> 
 <a href="#"><span  class="page">next</span></a> <a href="#" ><span  class="page">pre</span></a> 
 <%
-#ajax片段结尾
+//ajax片段结尾
 }
 %>
 ----------------------------
@@ -3541,9 +3341,9 @@ var session= {admin:{id:1,name:'admin'}};
 
 - 从后台性能看，将模型序列化成json性能会比渲染模板性能更好，但是，json还需要前端重新解析生成最终html dom节点，这可能会延迟最终数据的现实效果。而返回的html片段就是已经生成好的dom
 
-- 从网络传入来看，json无疑更好的，html片段会有额外的html标记，css属性，以及有可能的js调用。传入流量有可能增加50%到100%。但是，对于web应用类，这些额外数据，并不算多。
+-  从网络传入来看，json无疑更好的，html片段会有额外的html标记，css属性，以及有可能的js调用。传入流量有可能增加50%到100%。但是，对于web应用类，这些额外数据，并不算多。
 
-- 从开发效率来讲，返回html片段的开发效率更高一些，因为渲染在后台操作，可以随心所欲的用模板语言来渲染，来取得后台数据，完成复杂渲染.而json就相对困难些，可以说所有的json lib都没有完美的解决办法。
+- 从开发效率来讲，返回html片段的开发效率更高一些，因为渲染在后台操作，可以随心所欲的用模板语言来渲染，来取得后台数据，完成复杂渲染，而json就比较困难，可以说所有的json lib都没有完美的解决办法。
 
 - 从用户体验上来讲，Beetl 采用ajax标记，混合了传统的模板渲染和ajax加载。用户进入页面即能看到数据，而经典的ajax json方式还需要异步加载，显示延迟。另外如果页面同时有多个ajax加载，则会对服务器造成很大的压力。
 
@@ -3552,6 +3352,16 @@ var session= {admin:{id:1,name:'admin'}};
 - 关心客户端CPU消耗？ 过多的js无疑是客户端运行慢的主要原因。如果采用经典的json方式，返回的json数据必然还需要经过js的计算和渲染。会影响客户机器cpu。
 
 *************************************************
+
+=== 在页面输出错误提示信息 ===
+2.2.3版本以后，新增加org.beetl.ext.web.WebErrorHandler,可以在web开发的时候在页面输出提示信息，在产品模式下载后台输出提示信息（通过配置属性ESOURCE.autoCheck= true来认为是开发模式），仅仅需要配置如下:
+[source,html]
+----------------------------
+ERROR_HANDLER = org.beetl.ext.web.WebErrorHandler
+----------------------------
+
+
+
 
 == 附录 ==
 
@@ -3576,7 +3386,8 @@ var session= {admin:{id:1,name:'admin'}};
 
 - decode  一个简化的if else 结构，如 decode(a,1,"a=1",2,"a=2","不知道了")},如果a是1，这decode输出"a=1",如果a是2，则输出"a==2",
 如果是其他值，则输出"不知道了"
-- debug 在控制台输出debug指定的对象以及所在模板文件以及模板中的行数，如debug(1),则输出1 [在3行@/org/beetl/core/lab/hello.txt]
+
+- debug 在控制台输出debug指定的对象以及所在模板文件以及模板中的行数，如debug(1),则输出1 [在3行@/org/beetl/core/lab/hello.txt],也可以输出多个，如debug("hi",a),则输出hi,a=123,[在3行@/org/beetl/core/lab/hello.txt]
 
 - parseInt 将数字或者字符解析为整形  如 parseInt("123");
 
@@ -3586,34 +3397,38 @@ var session= {admin:{id:1,name:'admin'}};
 
 - flush 强制io输出。
 
+- json，将对象转成json字符串，如 var data = json(userList)  可以跟一个序列化规则 如,var data = json(userList,"[*].id:i"),具体参考     https://git.oschina.net/xiandafu/beetl-json 并下载btjson.jar 。要成功调用此函数，必须将btjson.jar 放到classpath里
+
+
+
 ==== 字符串相关方法 ====
 
-- strutil.startWith	${ strutil.startWith("hello","he") 输出是true
+- strutil.startWith	${ strutil.startWith(“hello”,”he”) 输出是true
 
-- strutil.endWith	${ strutil.endWith("hello","o") 输出是true
+- strutil.endWith	${ strutil.endWith(“hello”,”o”) 输出是true
 
-- strutil.length	${ strutil. length ("hello"),输出是5
+- strutil.length	${ strutil. length (“hello”),输出是5
 
-- strutil.subString	${ strutil.subString ("hello",1),输出是"ello"
+- strutil.subString	${ strutil.subString (“hello”,1),输出是“ello”
 
-- strutil.subStringTo	${ strutil.subStringTo ("hello",1,2),输出是"el"
+- strutil.subStringTo	${ strutil.subStringTo (“hello”,1,2),输出是“el”
 
-- strutil.split	${ strutil.split ("hello,joeli",","),输出是数组，有俩个元素，第一个是hello，第二个是joelli"
+- strutil.split	${ strutil.split (“hello,joeli”,”,”),输出是数组，有俩个元素，第一个是hello，第二个是joelli”
 
-- strutil.contain	${ strutil.contain ("hello,"el"),输出是true
+- strutil.contain	${ strutil.contain (“hello,”el”),输出是true
 
-- strutil.toUpperCase	${ strutil.toUpperCase ("hello"),输出是HELLO
+- strutil.toUpperCase	${ strutil.toUpperCase (“hello”),输出是HELLO
 
-- strutil.toLowerCase	${ strutil.toLowerCase ("Hello"),输出是hello
+- strutil.toLowerCase	${ strutil.toLowerCase (“Hello”),输出是hello
 
-- strutil.replace	${ strutil.replace ("Hello","lo","loooo"),输出是helloooo
+- strutil.replace	${ strutil.replace (“Hello”,”lo”,”loooo”),输出是helloooo
 
-- strutil.format	${ strutil.format ("hello,{0\}, my age is {1\}","joeli",15),输出是hello,joelli, my age is 15.
+- strutil.format	${ strutil.format (“hello,{0\}, my age is {1\}”,”joeli”,15),输出是hello,joelli, my age is 15.
 具体请参考http://docs.oracle.com/javase/6/docs/api/java/text/MessageFormat.html
 
 - strutil.trim	去掉字符串的尾部空格
 
-- strutil.formatDate	var a = strutil.formatDate(user.bir,'yyyy-MM-dd');
+- strutil.formatDate	var a = strutil.formatDate(user.bir,’yyyy-MM-dd’);
 
 - strutil.index  var index = strutil.index("abc","a");返回 索引0
 - strutil.lastIndex var index = strutil.lastIndex("aba","a");返回索引2
@@ -3770,11 +3585,11 @@ public void clearAll(String... keys);
 [source,java]
 ----------------------------
 <%
-includeJSP("/xxxx.jsp",{"key":"value"})
+includeJSP("/xxxx.jsp",{"key":"value"}){}
 %>
 ----------------------------
 
-key value 都是字符串，将以paramenter的形式提供给jsp，因此jsp可以通过request.getParameter("key")来获取参数
+key value 都是字符串，将以parameter的形式提供给jsp，因此jsp可以通过request.getParameter("key")来获取参数
 
 主要注意的是，这个标签并非内置，需要手工注册一下
 
@@ -3802,7 +3617,16 @@ Beetl2.0目前只完成了解释引擎，使用解释引擎好处是可以适用
 
 - 编译引擎将模板编译成类，会产生大量的类，虚拟机很难对这些做优化。而解释引擎只有几十个固定的类，虚拟机容易优化
 
+.相关文章
+**********************************************************************
 
+-  为什么JSP会比Beetl慢 http://my.oschina.net/xiandafu/blog/475740 
+
+-  Beetl 性能揭秘 2 ：语言如何存取变量 http://my.oschina.net/xiandafu/blog/293167
+
+-  Beetl 性能揭秘 1 ：如何输出一个整型变量 http://my.oschina.net/xiandafu/blog/284823
+
+**********************************************************************
 
 
 === 性能测试对比 ===
@@ -3822,23 +3646,23 @@ image:performance2.png[]
 
 作者
 
-- 闲.大赋
+- 闲.大赋：
 
 助手
 
-- 作死模式
-
-- 一粟蜉蝣
+- 作死模式：核心代码开发
+- 一粟蜉蝣：核心代码开发和版本发布
 
 代码捐助者
 
-- 逝水fox
-- kraken
-- 西安玛雅牛
-- 级?!
-- orangetys
-- Oo不懂oO
-- 原上一颗草
+- 逝水fox ：出色完成spring集成
+- kraken: 集合方法等扩展
+- 西安玛雅牛：复合加载器
+- 级?!: beetl扩展，crossMVC
+- orangetys： beetl插件
+- Oo不懂oO: beetl插件
+- 原上一颗草:Beetl早期使用者。
+- 龙图腾飞 ，WebErrorHandler，用来开发模式在 web上显示错误而不是控制台
 
 文档校验
 
@@ -3846,23 +3670,4 @@ image:performance2.png[]
 - Daemons
 
 
-=== Beetl 捐助者 ===
-
-- 凌宇 100元
-- 程希来 50
-- 杜伟 10
-- 黄卫 10
-- 谭斌 5
-- 张伟 20
-- 杨鬼 200
-- 龙伟 5
-- 顾小李 5
-- 秦国庆 2
-- 张建 200
-- 张建 50 ：）
-- 孟凡曾 5
-- 马瑞 20
-- 一维可航 10
-
-捐助的钱将用于续购云主机和域名。
 
