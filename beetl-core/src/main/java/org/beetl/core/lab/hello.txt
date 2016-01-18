@@ -1,1 +1,1 @@
-${user.age}
+${info.msg}
