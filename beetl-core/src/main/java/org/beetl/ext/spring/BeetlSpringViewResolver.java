@@ -27,12 +27,9 @@
  */
 package org.beetl.ext.spring;
 
-import java.nio.charset.Charset;
+import java.util.Locale;
 
 import org.beetl.core.GroupTemplate;
-import org.beetl.core.ResourceLoader;
-import org.beetl.core.resource.ClasspathResourceLoader;
-import org.beetl.core.resource.FileResourceLoader;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -92,6 +89,7 @@ public class BeetlSpringViewResolver extends AbstractTemplateViewResolver implem
 	}
 	
 	
+	
 
 	/**
 	 * 初始化检查GroupTemplate<br>
@@ -146,13 +144,9 @@ public class BeetlSpringViewResolver extends AbstractTemplateViewResolver implem
 	@Override
 	protected AbstractUrlBasedView buildView(String viewName) throws Exception
 	{
-//		BeetlSpringView beetlView = (BeetlSpringView) super.buildView(viewName);
-//		// 为视图对象注入GroupTemplate
-//		beetlView.setGroupTemplate(groupTemplate);
-//		return beetlView;
-//		
-//		
+
 		BeetlSpringView beetlView = (BeetlSpringView) super.buildView(viewName);
+		beetlView.setGroupTemplate(groupTemplate);
 		String suffix = getSuffix();
 		//如果配置有后缀，需要重新设定视图
 		if(suffix!=null&&suffix.length()!=0){

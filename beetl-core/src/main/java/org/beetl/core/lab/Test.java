@@ -1,6 +1,8 @@
 package org.beetl.core.lab;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,9 @@ public class Test
 	public static void main(String[] args) throws Exception
 	{
 		
+		DecimalFormat df = new DecimalFormat("#.##");
+		String str =  df.format(BigDecimal.ONE);
+		System.out.println(str);
 //			TestUser.Info info = TestUser.getInfo();
 //			
 //			Class c = info.getClass();
@@ -43,8 +48,9 @@ public class Test
 					Template t = gt.getTemplate("/org/beetl/core/lab/hello.txt");
 					t.binding("$page",new HashMap());
 					t.binding("user", new TestUser(""));
+					t.binding("cs", new ChargingStation());
 					t.binding("info",TestUser.getInfo());
-					
+					t.binding("n", new BigDecimal("0.0000"));
 					ByteArrayOutputStream bs = new ByteArrayOutputStream();
 					try
 					{
