@@ -1,8 +1,8 @@
 package org.beetl.core.lab;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +13,7 @@ import org.beetl.core.Function;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.ClasspathResourceLoader;
+import org.beetl.core.statement.PlaceholderST;
 /**
  * http://sports.qq.com/a/20151126/029300.htm
  * @author xiandafu
@@ -23,35 +24,45 @@ public class Test
 	public static void main(String[] args) throws Exception
 	{
 		
-		DecimalFormat df = new DecimalFormat("#.##");
-		String str =  df.format(BigDecimal.ONE);
-		System.out.println(str);
-//			TestUser.Info info = TestUser.getInfo();
-//			
-//			Class c = info.getClass();
-//			c.getClassLoader().
-//			int m = c.getModifiers();
-//			System.out.println(Modifier.isPublic(m));
-				ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader();
+		
+		
+				ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader("org/beetl/core/lab/");
 				Configuration cfg = Configuration.defaultConfiguration();
 				cfg.setDirectByteOutput(true);
 				cfg.getResourceMap().put("RESOURCE.autoCheck", "true");
+				
 				GroupTemplate gt = new GroupTemplate(resourceLoader, cfg);
 				cfg.setStatementStart("<%");
 				cfg.setStatementEnd("%>");
-				gt.registerFunctionPackage("test", new TestUser(""));
-				gt.registerTag("table", TestGeneralVarTagBinding.class);
-				gt.registerFormat("nf",new NewFormat());
-				for (int i = 0; i < 2; i++)
+				
+//				cfg.setPlaceholderStart("{{");
+//				cfg.setPlaceholderEnd("}}");
+//			
+				gt.registerFunction("test", new TestFun());
+				gt.registerTag("col", ColumnTag.class);
+				PlaceholderST.output = new PlaceholderST.Output(){
+
+					@Override
+					public void write(Context ctx, Object value) throws IOException {
+						ctx.byteWriter.writeString("ok"+value.toString());
+						
+					}
+					
+				};
+				Page page = new Page();
+				page.data.add(new TestUser("joeli"));
+				
+			
+				for (int i = 0; i < 1; i++)
 				{
 					
-					Template t = gt.getTemplate("/org/beetl/core/lab/hello.txt");
+					Template t = gt.getTemplate("/hello.txt");
 					t.binding("$page",new HashMap());
 					t.binding("user", new TestUser(""));
-					t.binding("cs", new ChargingStation());
 					t.binding("info",TestUser.getInfo());
 					t.binding("n", new BigDecimal("0.0000"));
 					t.binding("bo", "a");
+					t.binding("page", page);
 					ByteArrayOutputStream bs = new ByteArrayOutputStream();
 					try
 					{
@@ -67,21 +78,28 @@ public class Test
 				}
 
 	}
-
 	
+	
+
+	public static void testOne(){
+		
+	}
 
 	public static class TestFun implements Function
 	{
 
 		@Override
-		public List call(Object[] paras, Context ctx)
+		public String[] call(Object[] paras, Context ctx)
 		{
 			List list = new ArrayList();
 			list.add("hi");
 			list.add("joel");
 			System.out.println("list -----");
-			return list;
+			return (String[])list.toArray(new String[0]);
+			
 		}
 
 	}
+	
+	
 }

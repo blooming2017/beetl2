@@ -453,12 +453,30 @@ public class AntlrProgramBuilder
 
 	protected AjaxStatement parseAjax(AjaxStContext ajaxCtx)
 	{
-		GrammarToken token = this.getBTToken(ajaxCtx.Identifier().getSymbol());
+		GrammarToken token = null;
+		String flag = "render";
+		List<TerminalNode>  nodes = ajaxCtx.Identifier();
+		if(nodes.size()==1){
+			token = this.getBTToken(nodes.get(0).getSymbol());
+		}else{
+			token = this.getBTToken(nodes.get(1).getSymbol());
+			flag =  nodes.get(0).getSymbol().getText();
+			if(!(flag.equals("render")||flag.equals("norender"))){
+				BeetlException be = new BeetlException(BeetlException.AJAX_PROPERTY_ERROR,"expect render or norender ,but "+flag);
+				be.pushToken(token);
+				throw be;
+			}
+				
+			
+		}
+		
+		
+		
 		BlockContext blockCtx = ajaxCtx.block();
 
 		BlockStatement block = (BlockStatement) this.parseBlock(blockCtx.statement(), blockCtx);
 
-		AjaxStatement ajaxStat = new AjaxStatement(block, token);
+		AjaxStatement ajaxStat = new AjaxStatement(block, token,flag.equals("render"));
 
 		if (this.data.ajaxs == null)
 		{
@@ -831,7 +849,9 @@ public class AntlrProgramBuilder
 			{
 				data.dynamicObjectSet = ds.getIdList();
 			}
-			return null;
+			ds = new DirectiveStatement(directive, Collections.EMPTY_SET, this.getBTToken(token));
+			
+			return ds;
 
 		}
 		else if (directive.equalsIgnoreCase("safe_output_open".intern()))
