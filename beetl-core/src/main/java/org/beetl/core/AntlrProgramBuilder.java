@@ -185,6 +185,7 @@ import org.beetl.core.statement.VarAssignStatementSeq;
 import org.beetl.core.statement.VarAttribute;
 import org.beetl.core.statement.VarDefineNode;
 import org.beetl.core.statement.VarRef;
+import org.beetl.core.statement.VarRefAssignStatement;
 import org.beetl.core.statement.VarSquareAttribute;
 import org.beetl.core.statement.VarVirtualAttribute;
 import org.beetl.core.statement.WhileStatement;
@@ -540,12 +541,22 @@ public class AntlrProgramBuilder
 	
 	
 	protected VarAssignExpression  parseAssingInExp(AssignGeneralInExpContext agc){
-		GeneralAssignExpContext gas = agc.generalAssignExp();
-		ExpressionContext expCtx = gas.expression();
+
+		VarAssignExpression  vas = null;
+		ExpressionContext expCtx = agc.generalAssignExp().expression();
 		Expression exp = parseExpress(expCtx);
-		VarAssignExpression  vas = new VarAssignExpression(exp, getBTToken(agc.generalAssignExp().Identifier().getSymbol()));
-		registerVar(vas);
-		return vas;
+		VarRefContext varRefCtx = agc.generalAssignExp().varRef();
+		if(varRefCtx.children.size()==1){
+			//var a=1;
+			Token token =  varRefCtx.Identifier().getSymbol();
+			vas = new VarAssignExpression(exp, getBTToken(token));
+			registerVar(vas);
+			return vas ;
+		}else{
+			 throw new UnsupportedOperationException("不支持，稍后在想");
+		}
+		
+	
 	}
 //	纪录一个新变量
 	protected void registerNewVar(ASTNode vas){
@@ -572,10 +583,21 @@ public class AntlrProgramBuilder
 		if (amc instanceof AssignGeneralInStContext)
 		{
 			AssignGeneralInStContext agc = (AssignGeneralInStContext) amc;
-			String name = agc.generalAssignExp().Identifier().getSymbol().getText();
 			ExpressionContext expCtx = agc.generalAssignExp().expression();
 			Expression exp = parseExpress(expCtx);
-			vas = new VarAssignStatement(exp, getBTToken(agc.generalAssignExp().Identifier().getSymbol()));
+			VarRefContext varRefCtx = agc.generalAssignExp().varRef();
+			if(varRefCtx.children.size()==1){
+				//var a=1;
+				Token token =  varRefCtx.Identifier().getSymbol();
+				vas = new VarAssignStatement(exp, getBTToken(token));
+			}else{
+				// var a.b=1 since 2.7.0
+				
+				VarRef ref = this.parseVarRefInLeftExpression(varRefCtx);
+				
+				vas = new VarRefAssignStatement(exp, ref);
+			}
+			
 
 			return vas;
 		}
@@ -1714,7 +1736,7 @@ public class AntlrProgramBuilder
 		return new CompareExpression(a, b, mode, this.getBTToken(tn.getSymbol()));
 
 	}
-
+	
 	protected Expression parseVarRefExpression(VarRefContext varRef)
 	{
 
@@ -1777,6 +1799,37 @@ public class AntlrProgramBuilder
 		}
 
 		VarRef var = new VarRef(vas, hasSafe, safeExp, this.getBTToken(varRef.getText(), varRef.Identifier()
+				.getSymbol().getLine()), this.getBTToken(varRef.Identifier().getSymbol()));
+		pbCtx.setVarPosition(varRef.Identifier().getText(), var);
+		return var;
+	}
+
+	protected VarRef parseVarRefInLeftExpression(VarRefContext varRef)
+	{
+
+		Expression safeExp = null;
+		Safe_outputContext soctx = varRef.safe_output();
+		if (soctx != null)
+		{
+		  throw new BeetlException(BeetlException.ERROR,"语法错,赋值表达式不能使用安全输出");
+
+		}
+		
+
+		List<VarAttributeContext> list = varRef.varAttribute();
+		VarAttribute[] vas = this.parseVarAttribute(list);
+		// 变量属性，用来收集，暂时未用上
+		if (vas.length > 0)
+		{
+			VarAttribute first = vas[0];
+			if (!(first instanceof VarSquareAttribute || first instanceof VarVirtualAttribute))
+			{
+				pbCtx.setVarAttr(varRef.Identifier().getText(), first.token.text);
+			}
+
+		}
+
+		VarRef var = new VarRef(vas, false, null, this.getBTToken(varRef.getText(), varRef.Identifier()
 				.getSymbol().getLine()), this.getBTToken(varRef.Identifier().getSymbol()));
 		pbCtx.setVarPosition(varRef.Identifier().getText(), var);
 		return var;

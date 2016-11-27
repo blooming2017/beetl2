@@ -41,6 +41,8 @@ public class PojoMethodInvoker implements MethodInvoker
 {
 
 	public Method method;
+	public Method setMethod;
+	private boolean isCheck = false;
 
 	/**
 	 * @param m 目标调用方法，应该是一个无参数的get方法
@@ -48,7 +50,7 @@ public class PojoMethodInvoker implements MethodInvoker
 	public PojoMethodInvoker(Method m)
 	{
 		this.method = m;
-		//	this.method.setAccessible(true);
+
 	}
 
 	@Override
@@ -88,6 +90,57 @@ public class PojoMethodInvoker implements MethodInvoker
 	@Override
 	public Method getMethod() {
 		return method;
+	}
+
+	@Override
+	public void set(Object ins, Object value) {
+		checkSetterMethod();
+		if(setMethod==null){
+			throw new BeetlException(BeetlException.ATTRIBUTE_INVALID, "属性访问异常");
+		}
+		try {
+			setMethod.invoke(ins, value);
+		} catch (IllegalAccessException e) {
+			throw new BeetlException(BeetlException.ATTRIBUTE_INVALID, "错误参数", e);
+		} catch (IllegalArgumentException e) {
+			throw new BeetlException(BeetlException.ATTRIBUTE_INVALID, "无法访问", e);
+		} catch (InvocationTargetException e) {
+			Throwable target = e.getTargetException();
+			if (target instanceof BeetlException)
+			{
+				throw (BeetlException) target;
+			}
+			throw new BeetlException(BeetlException.ATTRIBUTE_INVALID, "属性访问异常", e.getTargetException());
+		}	
+		
+	}
+	
+	private void checkSetterMethod(){
+		if(isCheck){
+			return ;
+		}
+		synchronized(method){
+			if(isCheck){
+				return ;
+			}
+			Class c = this.method.getDeclaringClass();
+			Class type = this.method.getReturnType();
+			String name = this.method.getName();
+			String setName = null;
+			if(name.startsWith("is")){
+				setName="set"+name.substring(2);
+			}else{
+				//getXXX-->setXXX
+				setName="set"+name.substring(3);
+			}
+			try{
+				setMethod = c.getMethod(setName, type);
+			}catch(Exception ex ){
+				setMethod = null;
+			}
+			isCheck = true;
+		}
+		
 	}
 
 }

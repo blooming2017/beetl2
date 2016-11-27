@@ -25,71 +25,76 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.beetl.core.resource;
+package org.beetl.core.statement;
 
-import java.io.File;
-
-import org.beetl.core.Resource;
-import org.beetl.core.misc.BeetlUtil;
+import org.beetl.core.Context;
+import org.beetl.core.InferContext;
+import org.beetl.core.exception.BeetlException;
+import org.beetl.core.om.ObjectAA;
+import org.beetl.core.parser.BeetlParser.VarAttributeVirtualContext;
 
 /**
- * Web应用加载器
- * 
+ * var xxx.cc = exp;
  * @author joelli
- * 
- * 
+ *
  */
-public class WebAppResourceLoader extends FileResourceLoader
+public class VarRefAssignStatement extends VarAssignStatement
 {
 
-	public WebAppResourceLoader()
+	protected int varIndex;
+	public Expression exp;
+	public VarRef varRef;
+	protected VarAttribute lastVarAttribute = null;
+
+	public VarRefAssignStatement(Expression exp, VarRef varRef)
 	{
-
-		this.root = BeetlUtil.getWebRoot() + File.separator;
-
+		super(exp,exp.token);
+		this.exp = exp;
+		this.varRef = varRef;
+		lastVarAttribute = varRef.attributes[varRef.attributes.length-1];
 	}
 
-	/** 
-	 * @param root 
-	 */
-	public WebAppResourceLoader(String root)
+	public void execute(Context ctx)
 	{
-
-		if (root != null)
-			this.root = root;
-		else
-		{
-			this.root = BeetlUtil.getWebRoot() + File.separator;
+		Object value =  exp.evaluate(ctx);
+		Object obj = varRef.evaluateUntilLast(ctx);
+		Object key = null;
+		if(lastVarAttribute instanceof VarSquareAttribute){
+			key  = (((VarSquareAttribute)lastVarAttribute).exp).evaluate(ctx);
+			
+			
+		}else {
+			key = lastVarAttribute.name;
 		}
-
-	}
-
-	public WebAppResourceLoader(String root, String charset)
-	{
-
-		this();
-		this.root = root;
-		this.charset = charset;
-	}
-
-	@Override
-	public Resource getResource(String key)
-	{
-
-		return super.getResource(key);
-	}
-
-	@Override
-	public void close()
-	{
-		// TODO Auto-generated method stub
+		try{
+			ObjectAA.defaultObjectAA().setValue(obj, key, value);
+		}catch(ClassCastException ex){
+			BeetlException bx = new BeetlException(BeetlException.ATTRIBUTE_INVALID,ex);
+			bx.pushToken(lastVarAttribute.token);
+			throw bx;
+		}catch(BeetlException be){
+			be.pushToken(lastVarAttribute.token);
+			throw be;
+		}
+		
+		
 
 	}
 	
-	@Override
-	public String getInfo() {
-		// TODO Auto-generated method stub
-		return "WebAppResourceLoader,Root="+this.root;
+
+	public int getVarIndex()
+	{
+		return varIndex;
+	}
+
+	public void setVarIndex(int varIndex)
+	{
+		this.varIndex = varIndex;
+	}
+
+	public void infer(InferContext inferCtx)
+	{
+		//赋值不需要做类型推测
 	}
 
 }
